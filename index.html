@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Django od zera — ćwiczenie „Lista zadań”</title>
+<meta name="description" content="Interaktywny kurs Django w języku polskim: projekt od zera z symulowanym terminalem.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#0a0d12; --bg1:#0f141b; --bg2:#131a23; --bg3:#18212c;
+  --line:rgba(148,163,184,.13); --line2:rgba(148,163,184,.22);
+  --text:#e2e8f0; --dim:#aab4c3; --muted:#8792a1; --faint:#5d6774;
+  --accent:#7ce0c0; --accent-dim:rgba(124,224,192,.12);
+  --accent2:#93a6ff; --accent2-dim:rgba(147,166,255,.12);
+  --warn:#e0c07d; --err:#e2777f; --ok:#9dc986;
+  --mono:'JetBrains Mono','Cascadia Code','Consolas',ui-monospace,monospace;
+  --sans:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+  --r:14px; --deck-h:300px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg0);color:var(--text);font-family:var(--sans);font-size:15.5px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(900px 480px at 18% -8%,rgba(124,224,192,.055),transparent 62%),
+             radial-gradient(800px 420px at 88% -10%,rgba(147,166,255,.05),transparent 60%)}
+::selection{background:rgba(124,224,192,.25)}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3{line-height:1.25;letter-spacing:-.015em}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation}
+kbd{font-family:var(--mono);font-size:.72em;background:var(--bg3);border:1px solid var(--line2);
+  border-bottom-width:2px;border-radius:6px;padding:2px 7px;color:var(--dim)}
+.top{border-bottom:1px solid var(--line);background:rgba(10,13,18,.78);backdrop-filter:blur(14px);
+  position:sticky;top:0;z-index:50}
+.topin{max-width:1200px;margin:0 auto;padding:11px 24px;display:flex;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+.brand .dot{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px;
+  background:linear-gradient(140deg,rgba(124,224,192,.16),rgba(147,166,255,.14));border:1px solid var(--line2)}
+.brand small{display:block;font-weight:450;color:var(--muted);font-size:.72rem;letter-spacing:.02em}
+.topprog{margin-left:auto;display:flex;align-items:center;gap:12px;min-width:0}
+.pbar{width:170px;height:5px;border-radius:99px;background:var(--bg3);overflow:hidden}
+.pbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.pnum{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbtn{border:1px solid var(--line2);background:transparent;color:var(--dim);font-size:.78rem;
+  border-radius:8px;padding:6px 11px;transition:.18s}
+.tbtn:hover{color:var(--text);border-color:var(--accent);background:var(--accent-dim)}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 24px 24px;
+  display:grid;grid-template-columns:256px minmax(0,1fr);gap:38px;align-items:start}
+.side{position:sticky;top:66px;max-height:calc(100vh - 150px);overflow:auto;padding:18px 0 28px;scrollbar-width:thin}
+.side h4{font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:var(--faint);
+  margin:2px 4px 10px;font-weight:600}
+.side a{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:9px;color:var(--dim);
+  font-size:.83rem;line-height:1.35;border:1px solid transparent;transition:.15s;margin-bottom:2px}
+.side a:hover{background:var(--bg1);color:var(--text);text-decoration:none}
+.side a.on{background:var(--bg2);border-color:var(--line);color:var(--text)}
+.side .n{font-family:var(--mono);font-size:.68rem;color:var(--faint);min-width:18px;text-align:right}
+.side a.on .n{color:var(--accent)}
+.side .st{margin-left:auto;width:7px;height:7px;border-radius:50%;background:var(--bg3);flex:none}
+.side a.done .st{background:var(--ok)}
+.side a.cur .st{background:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.side .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ---------- sections ---------- */
+.hero{grid-column:2;padding:46px 0 6px}
+.hero .eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.16em;color:var(--accent);
+  font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:9px}
+.hero .eyebrow::before{content:"";width:22px;height:1px;background:var(--accent);opacity:.6}
+.hero h1{font-size:clamp(1.9rem,4.4vw,2.9rem);font-weight:700;margin-bottom:16px}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--dim);max-width:660px;font-size:1.03rem;margin-bottom:22px}
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:26px}
+.chip{font-size:.76rem;color:var(--dim);border:1px solid var(--line2);background:var(--bg1);
+  border-radius:99px;padding:5px 13px;display:inline-flex;gap:7px;align-items:center}
+.chip b{color:var(--text);font-weight:550}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.cta .big{border:1px solid transparent;background:linear-gradient(120deg,rgba(124,224,192,.92),rgba(147,166,255,.92));
+  color:#0a0d12;font-weight:620;font-size:.92rem;border-radius:11px;padding:11px 20px;transition:.2s}
+.cta .big:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.cta .ghost{border:1px solid var(--line2);background:var(--bg1);color:var(--text);font-size:.92rem;
+  border-radius:11px;padding:11px 20px;transition:.2s}
+.cta .ghost:hover{border-color:var(--accent);background:var(--accent-dim)}
+main{grid-column:2;display:flex;flex-direction:column;gap:22px;padding-bottom:12px}
+.sec{background:var(--bg1);border:1px solid var(--line);border-radius:18px;padding:30px var(--pad);
+  scroll-margin-top:86px;transition:border-color .3s}
+.sec.done{border-color:rgba(157,201,134,.25)}
+.sec-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.sec-num{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;
+  font-family:var(--mono);font-size:.86rem;color:var(--accent);background:var(--accent-dim);
+  border:1px solid rgba(124,224,192,.25)}
+.sec.done .sec-num{color:var(--ok);background:rgba(157,201,134,.1);border-color:rgba(157,201,134,.3)}
+.sec h2{font-size:1.22rem;font-weight:640;flex:1;min-width:200px}
+.time{font-size:.72rem;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:3px 11px;white-space:nowrap}
+.time.done{color:var(--ok);border-color:rgba(157,201,134,.35)}
+.sec-body{margin-top:12px;color:var(--dim)}
+.sec-body p{margin-bottom:13px}
+.sec-body strong{color:var(--text);font-weight:560}
+.sec-body ul{margin:0 0 14px 4px;padding-left:18px}
+.sec-body li{margin-bottom:6px}
+.sec-body li::marker{color:var(--accent)}
+code{font-family:var(--mono);font-size:.86em;background:var(--bg3);border:1px solid var(--line);
+  border-radius:6px;padding:1.5px 7px;color:var(--accent);white-space:nowrap}
+/* command block */
+.cmd{display:flex;align-items:center;gap:12px;background:var(--bg0);border:1px solid var(--line);
+  border-radius:11px;padding:11px 14px;margin:12px 0;font-family:var(--mono);font-size:.84rem;flex-wrap:wrap}
+.cmd .ps{color:var(--faint);user-select:none;flex:none}
+.cmd .c{color:var(--text);word-break:break-all}
+.cmd .ops{margin-left:auto;display:flex;gap:7px;flex:none}
+.ops button{font-size:.72rem;font-family:var(--sans);border:1px solid var(--line2);background:transparent;
+  color:var(--muted);border-radius:7px;padding:4px 10px;transition:.15s;white-space:nowrap}
+.ops button:hover{color:var(--text);border-color:var(--accent);background:var(--accent-dim)}
+.ops button.run:hover{color:#0a0d12;background:var(--accent);border-color:var(--accent)}
+/* tree */
+.tree{font-family:var(--mono);font-size:.8rem;line-height:1.75;color:var(--dim);background:var(--bg0);
+  border:1px solid var(--line);border-radius:11px;padding:16px 20px;margin:12px 0;overflow-x:auto;white-space:pre}
+.tree b{color:var(--accent);font-weight:500}
+/* notes */
+.note,.warn{display:flex;gap:12px;border-radius:11px;padding:13px 16px;margin:14px 0;font-size:.88rem;
+  line-height:1.6;align-items:flex-start}
+.note{background:var(--accent2-dim);border:1px solid rgba(147,166,255,.22);color:var(--dim)}
+.warn{background:rgba(224,192,125,.07);border:1px solid rgba(224,192,125,.25);color:var(--dim)}
+.note .i,.warn .i{flex:none;font-style:normal;font-size:1rem;line-height:1.5}
+.note strong,.warn strong{color:var(--text)}
+/* file card */
+.file{border:1px solid var(--line2);border-radius:12px;margin:14px 0;overflow:hidden;background:var(--bg0)}
+.file-head{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);
+  background:var(--bg2);flex-wrap:wrap}
+.fname{font-family:var(--mono);font-size:.78rem;color:var(--accent2)}
+.fname::before{content:"📄 ";font-size:.85em}
+.fbtn{margin-left:auto;font-size:.74rem;font-family:var(--sans);border:1px solid rgba(124,224,192,.4);
+  background:var(--accent-dim);color:var(--accent);border-radius:8px;padding:4px 12px;transition:.15s}
+.fbtn:hover{background:var(--accent);color:#0a0d12}
+.fbtn[disabled]{opacity:.45;cursor:not-allowed}
+.fbtn[disabled]:hover{background:var(--accent-dim);color:var(--accent)}
+.file pre{font-family:var(--mono);font-size:.8rem;line-height:1.65;color:var(--dim);padding:16px 18px;
+  overflow-x:auto;white-space:pre}
+.file pre .hl{color:var(--accent);font-weight:500}
+.file pre .cm{color:var(--faint)}
+.file.saved{border-color:rgba(157,201,134,.4)}
+.file.saved .fname::after{content:" ✓ zapisany";color:var(--ok);font-family:var(--sans);font-size:.72rem}
+/* reveal (pytanie kontrolne) */
+.q{border:1px dashed var(--line2);border-radius:12px;padding:16px 18px;margin:16px 0;background:var(--bg0)}
+.q .qq{color:var(--text);font-weight:540;font-size:.92rem;display:flex;gap:9px;align-items:baseline}
+.q .qq::before{content:"?";flex:none;width:20px;height:20px;border-radius:6px;background:var(--accent2-dim);
+  color:var(--accent2);font-size:.78rem;display:grid;place-items:center;font-weight:600;transform:translateY(2px)}
+.q button{margin-top:10px;font-size:.76rem;font-family:var(--sans);color:var(--accent2);
+  background:var(--accent2-dim);border:1px solid rgba(147,166,255,.3);border-radius:8px;padding:4px 12px}
+.q .ans{margin-top:11px;padding-top:11px;border-top:1px solid var(--line);color:var(--dim);
+  font-size:.88rem;display:none}
+.q.open .ans{display:block}
+/* student tasks */
+.tasks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.tsk{border:1px solid var(--line);border-radius:12px;background:var(--bg0);padding:15px 16px;transition:.2s;cursor:pointer}
+.tsk:hover{border-color:var(--line2)}
+.tsk.chk{border-color:rgba(157,201,134,.4);background:rgba(157,201,134,.05)}
+.tsk .th{display:flex;gap:10px;align-items:flex-start;color:var(--text);font-weight:540;font-size:.88rem}
+.tsk .th input{margin-top:4px;accent-color:var(--ok);width:15px;height:15px;flex:none;cursor:pointer}
+.tsk p{font-size:.82rem;color:var(--muted);margin:7px 0 0;line-height:1.6}
+.tsk code{white-space:normal}
+/* table (ściąga) */
+.tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:.83rem}
+.tbl th{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--faint);text-align:left;
+  padding:8px 12px;border-bottom:1px solid var(--line2);font-weight:600}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--line);color:var(--dim);vertical-align:top}
+.tbl td:first-child{font-family:var(--mono);font-size:.78rem;color:var(--accent);white-space:nowrap}
+.tbl tr:hover td{background:var(--bg2)}
+/* flow */
+.flow{display:flex;flex-direction:column;align-items:center;gap:0;margin:18px 0}
+.flow .fstep{border:1px solid var(--line2);background:var(--bg2);border-radius:10px;padding:8px 22px;
+  font-family:var(--mono);font-size:.8rem;color:var(--text);min-width:220px;text-align:center;transition:.2s}
+.flow .fstep:hover{border-color:var(--accent);color:var(--accent)}
+.flow .fa{color:var(--faint);font-size:.85rem;line-height:1.6;user-select:none}
+/* quiz */
+.quiz .qi{border:1px solid var(--line);border-radius:12px;background:var(--bg0);padding:17px 19px;margin:12px 0}
+.quiz .qq2{color:var(--text);font-weight:540;font-size:.9rem;margin-bottom:10px}
+.quiz label{display:flex;gap:10px;align-items:flex-start;padding:7px 11px;border-radius:9px;color:var(--dim);
+  font-size:.85rem;cursor:pointer;border:1px solid transparent;transition:.15s;margin-bottom:3px}
+.quiz label:hover{background:var(--bg2)}
+.quiz label input{margin-top:4px;accent-color:var(--accent2);cursor:pointer;flex:none}
+.quiz .qi.right label.good{border-color:rgba(157,201,134,.45);background:rgba(157,201,134,.08);color:var(--text)}
+.quiz .qi.right label.badz{border-color:rgba(226,119,127,.4);background:rgba(226,119,127,.06)}
+.quiz .qres{margin-top:16px;font-size:.9rem;color:var(--dim)}
+.qbtn{margin-top:14px;border:1px solid transparent;background:linear-gradient(120deg,rgba(124,224,192,.92),rgba(147,166,255,.92));
+  color:#0a0d12;font-weight:620;font-size:.85rem;border-radius:10px;padding:9px 18px}
+footer{grid-column:2;border-top:1px solid var(--line);margin-top:18px;padding:22px 4px 10px;
+  color:var(--faint);font-size:.78rem;display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between}
+/* ---------- deck (terminal / pliki / przeglądarka) ---------- */
+.deck{position:fixed;left:0;right:0;bottom:0;z-index:90;background:rgba(13,17,23,.92);backdrop-filter:blur(18px);
+  border-top:1px solid var(--line2);transition:height .25s ease;height:var(--deck-h);display:flex;flex-direction:column}
+.deck.min{height:46px}
+.deckbar{display:flex;align-items:center;gap:6px;padding:0 14px;height:46px;flex:none;border-bottom:1px solid var(--line)}
+.tab{background:transparent;border:1px solid transparent;color:var(--muted);font-size:.8rem;border-radius:8px;
+  padding:5px 13px;display:inline-flex;gap:8px;align-items:center;transition:.15s}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--accent);background:var(--accent-dim);border-color:rgba(124,224,192,.25)}
+.tab .tglyph{font-size:.85em}
+.dstat{margin-left:auto;display:flex;gap:8px;align-items:center}
+.stchip{font-family:var(--mono);font-size:.68rem;border-radius:99px;padding:3px 11px;border:1px solid var(--line);
+  color:var(--faint);display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.stchip.on{color:var(--ok);border-color:rgba(157,201,134,.35);background:rgba(157,201,134,.07)}
+.stchip.on2{color:var(--accent);border-color:rgba(124,224,192,.35);background:var(--accent-dim)}
+.dbtn{background:transparent;border:1px solid var(--line2);color:var(--muted);border-radius:8px;
+  font-size:.72rem;padding:4px 10px;transition:.15s;white-space:nowrap}
+.dbtn:hover{color:var(--text);border-color:var(--accent)}
+.deckbody{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;display:none}
+.view.on{display:flex}
+/* terminal */
+.view.term{flex-direction:column;background:rgba(8,11,15,.6)}
+.termout{flex:1;overflow-y:auto;padding:14px 18px 6px;font-family:var(--mono);font-size:.8rem;line-height:1.65;
+  scrollbar-width:thin}
+.tline{white-space:pre-wrap;word-break:break-word}
+.l-cmd{color:var(--text)}
+.l-cmd .ps{color:var(--accent)}
+.l-out{color:var(--dim)}
+.l-ok{color:var(--ok)}
+.l-err{color:var(--err)}
+.l-warn{color:var(--warn)}
+.l-info{color:var(--muted)}
+.l-info2{color:var(--accent2)}
+.l-sys{color:var(--faint)}
+.inrow{display:flex;align-items:center;gap:9px;padding:9px 18px 13px;flex:none}
+.inrow .ps1{font-family:var(--mono);font-size:.8rem;color:var(--accent);white-space:nowrap;flex:none}
+.inrow .ps1 .v{color:var(--ok)}
+.inrow input{flex:1;background:transparent;border:0;outline:0;color:var(--text);font-family:var(--mono);
+  font-size:.8rem;caret-color:var(--accent);min-width:0}
+.inrow input::placeholder{color:var(--faint)}
+/* hint under input */
+.hintline{margin:0 18px;padding:5px 13px;border-radius:9px 9px 0 0;
+  background:rgba(24,33,44,.92);border:1px solid var(--line2);border-bottom:0;color:var(--muted);
+  font-size:.72rem;display:flex;gap:9px;align-items:center;white-space:nowrap;overflow:hidden;flex:none}
+.hintline b{color:var(--accent);font-weight:550;flex:none}
+.hintline .hc{font-family:var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis}
+/* fold hints (bonus) */
+details.hint{border:1px solid var(--line);border-radius:12px;background:var(--bg0);padding:12px 16px;margin:12px 0}
+details.hint summary{cursor:pointer;color:var(--accent2);font-size:.88rem;font-weight:550;list-style:none;
+  display:flex;align-items:center;gap:8px}
+details.hint summary::before{content:"▸";color:var(--faint);transition:.15s}
+details.hint[open] summary::before{transform:rotate(90deg)}
+details.hint[open] summary{margin-bottom:10px}
+details.hint summary:hover{color:var(--text)}
+.fname em{font-style:normal;color:var(--muted);font-family:var(--sans);font-size:.9em}
+/* files */
+.view.files{background:rgba(8,11,15,.4)}
+.ftree{width:262px;flex:none;overflow-y:auto;border-right:1px solid var(--line);padding:12px 8px;
+  font-family:var(--mono);font-size:.78rem;scrollbar-width:thin}
+.fnode{display:flex;align-items:center;gap:7px;color:var(--dim);padding:3.5px 9px;border-radius:7px;cursor:pointer;
+  white-space:nowrap;transition:.12s}
+.fnode:hover{background:var(--bg2);color:var(--text)}
+.fnode.act{background:var(--bg3);color:var(--text)}
+.fnode .fi{flex:none;width:14px;text-align:center;font-size:.9em}
+.fnode .kids{display:none;margin-left:14px;border-left:1px solid var(--line);padding-left:4px}
+.fnode.open>.kids{display:block}
+.fnode .car{flex:none;font-size:.62em;color:var(--faint);transition:.15s;width:9px}
+.fnode.open>.car{transform:rotate(90deg)}
+.fnode.dim{opacity:.45}
+.fview{flex:1;min-width:0;overflow:auto;padding:16px 20px;scrollbar-width:thin}
+.fview .fvname{font-family:var(--mono);font-size:.75rem;color:var(--accent2);margin-bottom:10px;
+  display:flex;gap:10px;align-items:center}
+.fview pre{font-family:var(--mono);font-size:.76rem;line-height:1.7;color:var(--dim);white-space:pre;overflow-x:auto}
+.fview .fvnote{color:var(--muted);font-size:.8rem;font-family:var(--sans);line-height:1.6;max-width:560px}
+/* browser */
+.view.brow{flex-direction:column;background:rgba(8,11,15,.4)}
+.bchrome{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);flex:none}
+.bbtns{display:flex;gap:5px;flex:none}
+.bbtns i{width:9px;height:9px;border-radius:50%;background:var(--bg3);display:block}
+.baddr{flex:1;display:flex;align-items:center;gap:8px;background:var(--bg0);border:1px solid var(--line);
+  border-radius:99px;padding:5px 14px;min-width:0}
+.baddr span{color:var(--ok);font-size:.8rem;flex:none}
+.baddr input{flex:1;background:transparent;border:0;outline:0;color:var(--dim);font-family:var(--mono);font-size:.75rem;min-width:0}
+.bpage{flex:1;overflow-y:auto;scrollbar-width:thin;background:#fff;border-radius:10px;margin:12px 14px 14px;
+  color:#1f2430;font-family:var(--sans);font-size:.86rem;line-height:1.6}
+.pg{min-height:100%;display:flex;flex-direction:column}
+.pg-pad{padding:26px 30px}
+/* connection refused */
+.pg-ref{align-items:center;justify-content:center;background:#fff;text-align:center;padding:30px}
+.pg-ref .e{font-size:2.4rem;margin-bottom:12px}
+.pg-ref h3{color:#202124;font-size:1.05rem;font-weight:560;margin-bottom:6px}
+.pg-ref p{color:#5f6368;font-size:.8rem;max-width:420px;margin:0 auto 4px}
+.pg-ref .c2{font-family:var(--mono);font-size:.72rem;color:#9aa0a6;display:block;margin-top:8px}
+/* rocket page */
+.pg-rocket{align-items:center;justify-content:center;text-align:center;background:#f7f5f0}
+.pg-rocket .r{font-size:3rem;margin-bottom:10px}
+.pg-rocket h3{color:#3b4045;font-size:1.1rem;font-weight:560;margin-bottom:8px}
+.pg-rocket p{color:#6b7076;font-size:.8rem;max-width:430px;margin:0 auto}
+.pg-rocket .box{margin-top:16px;border:1px solid #e3e1dc;border-radius:10px;background:#fff;
+  padding:12px 16px;font-size:.75rem;color:#5f6368;max-width:460px;text-align:left}
+.pg-rocket .box code{background:#f0eeea;border-color:#e3e1dc;color:#444}
+/* debug page */
+.pg-debug{background:#fdf5cc;color:#232323;font-family:var(--mono);font-size:.78rem}
+.pg-debug .dt{background:#c9b458;color:#fff;padding:8px 16px;font-weight:600}
+.pg-debug .db{padding:14px 18px}
+.pg-debug h4{font-size:.95rem;margin-bottom:8px;font-family:var(--sans)}
+.pg-debug .exc{color:#a33}
+/* student page (lista zadań) */
+.pg-stud{background:#f2f2f2;padding:40px 20px}
+.pg-stud .container{max-width:600px;margin:auto;background:#fff;padding:30px;border-radius:10px;
+  font-family:Arial,sans-serif}
+.pg-stud h1{color:#333;font-size:1.3rem;margin-bottom:14px;font-family:Arial,sans-serif}
+.pg-stud ol,.pg-stud ul{padding-left:22px}
+.pg-stud li{margin:10px 0;padding:10px;background:#e8f0fe;border-radius:5px;color:#333}
+.pg-stud .cnt{color:#555;font-size:.85rem;margin-top:12px;font-family:Arial,sans-serif}
+/* admin */
+.pg-admin{background:#f8f8f8;align-items:center;justify-content:center;padding:30px}
+.pg-admin .abox{background:#fff;border:1px solid #e0e0e0;border-radius:6px;padding:24px 26px;width:340px}
+.pg-admin h3{font-size:1rem;color:#333;margin-bottom:12px;font-weight:560}
+.pg-admin label{display:block;font-size:.78rem;color:#555;margin:9px 0 4px}
+.pg-admin input{width:100%;border:1px solid #ccc;border-radius:4px;padding:7px 9px;font-size:.82rem;background:#fff;color:#222}
+.pg-admin .alog{margin-top:14px;background:#204e8a;color:#fff;border-radius:4px;text-align:center;padding:8px;font-size:.84rem}
+.pg-admin p{font-size:.74rem;color:#777;margin-top:12px}
+/* responsive */
+@media (max-width:1020px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:sticky;top:55px;z-index:40;background:var(--bg0);max-height:none;padding:10px 0 12px;min-width:0;
+    display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid var(--line);grid-column:1;scrollbar-width:none}
+  .side::-webkit-scrollbar{display:none}
+  .side h4{display:none}
+  .side a{white-space:nowrap;flex:none;background:var(--bg1);border:1px solid var(--line);padding:8px 12px}
+  .side a .st{display:none}
+  .hero,main,footer{grid-column:1}
+  .hero{padding:30px 0 6px}
+  .tasks{grid-template-columns:1fr}
+  .sec{scroll-margin-top:130px}
+  .ftree{width:210px}
+}
+@media (max-width:560px){
+  :root{--deck-h:280px}
+  body{font-size:15px}
+  .wrap{padding:0 14px}
+  .hero{padding:26px 0 4px}
+  .hero h1{font-size:1.72rem;margin-bottom:13px}
+  .lead{font-size:.97rem;margin-bottom:18px}
+  .chips{gap:7px;margin-bottom:20px}
+  .chip{padding:4px 11px;font-size:.73rem}
+  .cta .big,.cta .ghost{flex:1 1 100%;text-align:center;padding:13px 16px;font-size:.95rem}
+  .sec{padding:20px 15px;scroll-margin-top:122px}
+  .sec-num{width:34px;height:34px;font-size:.8rem;border-radius:10px}
+  .sec h2{min-width:0;font-size:1.08rem}
+  .time{font-size:.68rem;padding:2px 9px}
+  .sec-body p{margin-bottom:12px}
+  code{white-space:normal;word-break:break-word}
+  .cmd{font-size:.8rem;padding:10px 12px;gap:8px;margin:12px 0}
+  .cmd .ops{margin-left:0;width:100%;padding-top:2px}
+  .ops button{padding:7px 14px;font-size:.74rem}
+  .tree{font-size:.74rem;padding:14px 16px}
+  .note,.warn{padding:12px 14px;font-size:.84rem;gap:10px}
+  .file{margin:12px 0}
+  .file-head{padding:8px 12px;gap:8px}
+  .fname{font-size:.72rem}
+  .fbtn{padding:7px 12px;font-size:.76rem}
+  .file pre{padding:14px;font-size:.74rem}
+  .q{padding:14px;margin:14px 0}
+  .q .ans{font-size:.86rem}
+  .tasks{gap:10px;margin:12px 0}
+  .tsk{padding:13px 14px}
+  .tsk .th input{width:18px;height:18px;margin-top:2px}
+  .tbl{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tbl td{padding:8px 10px}
+  .flow .fstep{min-width:0;width:100%;padding:8px 14px}
+  .quiz .qi{padding:14px 15px}
+  .quiz label{padding:9px 12px;font-size:.86rem}
+  .qbtn{padding:11px 18px;font-size:.88rem}
+  details.hint{padding:11px 13px}
+  .topin{padding:9px 12px;gap:10px}
+  .brand{gap:8px}
+  .brand .dot{width:26px;height:26px;font-size:13px}
+  .brand small{display:none}
+  .pbar{width:90px}
+  .side{top:52px}
+  .pnum{display:none}
+  /* deck: na telefonie startuje zwinięty (JS); belka zawija się do 2 wierszy gdy trzeba */
+  .deck.min{height:auto;min-height:46px}
+  .deckbar{flex-wrap:wrap;height:auto;min-height:46px;padding:4px 8px;gap:3px}
+  .tab{padding:8px 9px;font-size:.76rem;gap:5px}
+  .dstat{gap:6px}
+  .dstat .stchip{display:none}
+  .dstat .dbtn[disabled]{display:none}
+  .dbtn{padding:7px 9px;font-size:.7rem}
+  .termout{padding:12px 14px 6px;font-size:.78rem}
+  .hintline{margin:0 14px;font-size:.7rem}
+  .inrow{padding:9px 14px 13px;gap:8px}
+  .inrow .ps1{font-size:.74rem}
+  .view.files{flex-direction:column}
+  .ftree{width:100%;border-right:0;border-bottom:1px solid var(--line);max-height:132px}
+  .fnode{padding:7px 9px}
+  .fview{padding:14px 12px}
+  .fview pre{font-size:.72rem}
+  .bchrome{padding:8px 10px;gap:7px}
+  .baddr{padding:6px 12px}
+  .bpage{margin:8px}
+  .pg-pad{padding:18px 16px}
+  .pg-ref{padding:22px 14px}
+  .pg-stud{padding:24px 14px}
+  .pg-stud .container{padding:20px 16px}
+  .pg-debug .db{overflow-x:auto}
+  .pg-admin{padding:20px}
+  .pg-admin .abox{width:100%;max-width:340px;padding:18px}
+  footer{padding:18px 2px 14px;font-size:.73rem;flex-direction:column;gap:6px}
+}
+/* urządzenia dotykowe: pole < 16px przy fokusie powoduje zoom iOS */
+@media (pointer:coarse){
+  .inrow input,.baddr input{font-size:1rem}
+  .side a,.tab,.dbtn,.ops button,.fbtn{min-height:34px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<div class="top"><div class="topin">
+  <div class="brand"><div class="dot">🚀</div><div>Django od zera<small>ćwiczenie „Lista zadań” · technik programista</small></div></div>
+  <div class="topprog">
+    <div class="pbar"><i id="pfill"></i></div><span class="pnum" id="pnum">0 / 12</span>
+    <button class="tbtn" id="resetbtn" title="Usuwa zapisany postęp (localStorage)">Wyczyść postęp</button>
+  </div>
+</div></div>
+<div class="wrap">
+<nav class="side" id="side" aria-label="Spis kroków">
+  <h4>Kurs</h4>
+  <a href="#st1"><span class="n">01</span><span class="lbl">Przygotowanie projektu</span><span class="st"></span></a>
+  <a href="#st2"><span class="n">02</span><span class="lbl">Środowisko wirtualne</span><span class="st"></span></a>
+  <a href="#st3"><span class="n">03</span><span class="lbl">Projekt Django</span><span class="st"></span></a>
+  <a href="#st4"><span class="n">04</span><span class="lbl">Uruchomienie serwera</span><span class="st"></span></a>
+  <a href="#st5"><span class="n">05</span><span class="lbl">Utworzenie aplikacji</span><span class="st"></span></a>
+  <a href="#st6"><span class="n">06</span><span class="lbl">INSTALLED_APPS</span><span class="st"></span></a>
+  <a href="#st7"><span class="n">07</span><span class="lbl">Pierwszy widok</span><span class="st"></span></a>
+  <a href="#st8"><span class="n">08</span><span class="lbl">Adresy URL</span><span class="st"></span></a>
+  <a href="#st9"><span class="n">09</span><span class="lbl">Szablon HTML</span><span class="st"></span></a>
+  <a href="#st10"><span class="n">10</span><span class="lbl">Podgląd w przeglądarce</span><span class="st"></span></a>
+  <a href="#st11"><span class="n">11</span><span class="lbl">Style CSS</span><span class="st"></span></a>
+  <a href="#st12"><span class="n">12</span><span class="lbl">Zadania dla ucznia</span><span class="st"></span></a>
+  <h4>Więcej</h4>
+  <a href="#st13"><span class="n">＋</span><span class="lbl">Bonus: formularz</span><span class="st"></span></a>
+  <a href="#st14"><span class="n">★</span><span class="lbl">Ściąga i quiz</span><span class="st"></span></a>
+</nav>
+<header class="hero" id="start">
+  <div class="eyebrow">Interaktywny kurs · Django · od zera</div>
+  <h1>Projekt Django od zera:<br><em>aplikacja „Lista zadań”</em></h1>
+  <p class="lead">Zbudujesz pierwszy projekt w Django — od pustego folderu po działającą stronę z listą zadań.
+  Polecenia wpisujesz <strong>w symulowanym terminalu</strong> u dołu ekranu, a efekty obserwujesz w
+  <strong>wirtualnych plikach</strong> i <strong>przeglądarce</strong>. Strona prowadzi Cię za rękę i sprawdza każdy krok.</p>
+  <div class="chips">
+    <span class="chip">⏱ <b>≈ 60 minut</b></span>
+    <span class="chip">🎯 <b>technik programista</b></span>
+    <span class="chip">🧰 <b>VS Code · Python · Django</b></span>
+    <span class="chip">💾 postęp zapisuje się automatycznie</span>
+  </div>
+  <div class="cta">
+    <a class="big" href="#st1">Rozpocznij kurs ↓</a>
+    <button class="ghost" id="openDeck">Otwórz terminal</button>
+  </div>
+</header>
+<main>
+<!-- KROK 1 -->
+<section class="sec" id="st1">
+  <div class="sec-head"><div class="sec-num">01</div><h2>Przygotowanie projektu</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p>Utwórz na komputerze folder <code>django_cwiczenie</code> — w nim powstanie cały projekt. Następnie otwórz
+    go w <strong>Visual Studio Code</strong> i wybierz w menu <strong>Terminal → New Terminal</strong> (lub <kbd>Ctrl</kbd>+<kbd>`</kbd>).</p>
+    <p>Sprawdź, czy Python jest zainstalowany:</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">python --version</span>
+      <span class="ops"><button data-a="put" data-cmd="python --version">Wstaw</button><button class="run" data-a="run" data-cmd="python --version">Uruchom</button></span></div>
+    <p>Jeżeli to nie działa w systemie Windows, spróbuj <code>py --version</code>. Powinieneś zobaczyć coś podobnego
+    do <code>Python 3.12.7</code>.</p>
+    <p>Utwórz teraz folder projektu i wejdź do niego:</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">mkdir django_cwiczenie</span>
+      <span class="ops"><button data-a="put" data-cmd="mkdir django_cwiczenie">Wstaw</button><button class="run" data-a="run" data-cmd="mkdir django_cwiczenie">Uruchom</button></span></div>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">cd django_cwiczenie</span>
+      <span class="ops"><button data-a="put" data-cmd="cd django_cwiczenie">Wstaw</button><button class="run" data-a="run" data-cmd="cd django_cwiczenie">Uruchom</button></span></div>
+    <div class="note"><span class="i">💡</span><span><strong>Wskazówka:</strong> po <code>cd django_cwiczenie</code> ścieżka
+    w zachęcie terminala zmieni się na <code>…\django_cwiczenie&gt;</code> — wszystkie kolejne polecenia wykonujesz
+    właśnie w tym folderze.</span></div>
+  </div>
+</section>
+<!-- KROK 2 -->
+<section class="sec" id="st2">
+  <div class="sec-head"><div class="sec-num">02</div><h2>Środowisko wirtualne</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p><strong>Środowisko wirtualne (venv)</strong> to odseparowana „koperta” na biblioteki Twojego projektu —
+    dzięki niej paczki zainstalowane w ćwiczeniu nie pomieszają się z innymi projektami.</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">python -m venv venv</span>
+      <span class="ops"><button data-a="put" data-cmd="python -m venv venv">Wstaw</button><button class="run" data-a="run" data-cmd="python -m venv venv">Uruchom</button></span></div>
+    <p>Polecenie nic nie wypisuje — po prostu tworzy folder <code>venv/</code>. Aktywuj je (Windows):</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">venv\Scripts\activate</span>
+      <span class="ops"><button data-a="put" data-cmd="venv\Scripts\activate">Wstaw</button><button class="run" data-a="run" data-cmd="venv\Scripts\activate">Uruchom</button></span></div>
+    <p>Jeżeli wszystko działa, przed ścieżką w terminalu pojawi się <code>(venv)</code>. Teraz zainstaluj Django:</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">pip install django</span>
+      <span class="ops"><button data-a="put" data-cmd="pip install django">Wstaw</button><button class="run" data-a="run" data-cmd="pip install django">Uruchom</button></span></div>
+    <p>I sprawdź instalację:</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">django-admin --version</span>
+      <span class="ops"><button data-a="put" data-cmd="django-admin --version">Wstaw</button><button class="run" data-a="run" data-cmd="django-admin --version">Uruchom</button></span></div>
+    <div class="note"><span class="i">💡</span><span><code>pip</code> to menedżer paczek Pythona — pobiera biblioteki
+    z repozytorium PyPI. Po aktywacji venv instaluje je <strong>w środku środowiska</strong>, nie globalnie.</span></div>
+  </div>
+</section>
+<!-- KROK 3 -->
+<section class="sec" id="st3">
+  <div class="sec-head"><div class="sec-num">03</div><h2>Utworzenie projektu Django</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p>Projekt to „plecak” aplikacji: konfiguracja, ustawienia i adresy URL. Utwórz go poleceniem:</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">django-admin startproject todo_project .</span>
+      <span class="ops"><button data-a="put" data-cmd="django-admin startproject todo_project .">Wstaw</button><button class="run" data-a="run" data-cmd="django-admin startproject todo_project .">Uruchom</button></span></div>
+    <div class="warn"><span class="i">⚠️</span><span><strong>Kropka na końcu jest ważna!</strong> Powoduje, że projekt powstaje
+    <strong>w bieżącym folderze</strong> (obok <code>venv/</code>), a nie w dodatkowym podfolderze.</span></div>
+    <p>Struktura projektu powinna wyglądać mniej więcej tak:</p>
+    <div class="tree">django_cwiczenie/
+├── <b>venv/</b>
+├── <b>manage.py</b>
+└── <b>todo_project/</b>
+    ├── __init__.py
+    ├── settings.py
+    ├── urls.py
+    ├── asgi.py
+    └── wsgi.py</div>
+    <p>Najważniejszy plik to <code>manage.py</code> — służy między innymi do wykonywania poleceń związanych
+    z projektem Django (uruchamianie serwera, tworzenie aplikacji, migracje). Podgląd plików znajdziesz
+    w panelu na dole, w karcie <strong>Pliki</strong>.</p>
+  </div>
+</section>
+<!-- KROK 4 -->
+<section class="sec" id="st4">
+  <div class="sec-head"><div class="sec-num">04</div><h2>Uruchomienie serwera</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p>Django ma wbudowany serwer developerski. Wpisz:</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">python manage.py runserver</span>
+      <span class="ops"><button data-a="put" data-cmd="python manage.py runserver">Wstaw</button><button class="run" data-a="run" data-cmd="python manage.py runserver">Uruchom</button></span></div>
+    <p>W terminalu powinien pojawić się adres podobny do <code>http://127.0.0.1:8000/</code>. Przełącz się na kartę
+    <strong>Przeglądarka</strong> w panelu na dole i otwórz ten adres — jeżeli zobaczysz stronę startową Django
+    (rakieta 🚀), projekt działa prawidłowo.</p>
+    <div class="note"><span class="i">🛑</span><span>Serwer zatrzymasz skrótem <kbd>Ctrl</kbd>+<kbd>C</kbd> — jest do tego
+    przycisk na pasku terminala (działa tylko, gdy serwer biega). Przed kolejnymi krokami zatrzymaj serwer.</span></div>
+  </div>
+</section>
+<!-- KROK 5 -->
+<section class="sec" id="st5">
+  <div class="sec-head"><div class="sec-num">05</div><h2>Utworzenie aplikacji</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p>Projekt Django może składać się z wielu aplikacji. <strong>Aplikacja</strong> realizuje konkretną część
+    funkcjonalności — w naszym przypadku będzie to lista zadań: aplikacja <code>tasks</code>.</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">python manage.py startapp tasks</span>
+      <span class="ops"><button data-a="put" data-cmd="python manage.py startapp tasks">Wstaw</button><button class="run" data-a="run" data-cmd="python manage.py startapp tasks">Uruchom</button></span></div>
+    <p>W projekcie pojawi się nowy katalog:</p>
+    <div class="tree">tasks/
+├── __init__.py
+├── admin.py
+├── apps.py
+├── migrations/
+├── models.py
+├── tests.py
+└── views.py</div>
+    <div class="q" id="q5">
+      <div class="qq">Pytanie kontrolne: czym różni się projekt Django od aplikacji Django?</div>
+      <button data-a="reveal" data-q="q5">Pokaż odpowiedź</button>
+      <div class="ans">Projekt jest <strong>całym systemem</strong>, natomiast aplikacja realizuje <strong>konkretną
+      część jego funkcjonalności</strong>. W jednym projekcie może działać wiele aplikacji (np. <code>tasks</code>,
+      <code>formularz</code>, <code>blog</code>).</div>
+    </div>
+  </div>
+</section>
+<!-- KROK 6 -->
+<section class="sec" id="st6">
+  <div class="sec-head"><div class="sec-num">06</div><h2>Dodanie aplikacji do projektu</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p>Otwórz <code>todo_project/settings.py</code>, znajdź <code>INSTALLED_APPS = [</code> i dopisz na końcu listy
+    <code>'tasks',</code> — dzięki temu Django zacznie „widzieć” Twoją aplikację:</p>
+    <div class="file" data-file="todo_project/settings.py" data-need="app">
+      <div class="file-head"><span class="fname">todo_project/settings.py</span>
+      <button class="fbtn" data-a="save" data-file="todo_project/settings.py">Zapisz plik</button></div>
+      <pre>INSTALLED_APPS = [
+    <span class="cm">'django.contrib.admin',</span>
+    <span class="cm">'django.contrib.auth',</span>
+    <span class="cm">'django.contrib.contenttypes',</span>
+    <span class="cm">'django.contrib.sessions',</span>
+    <span class="cm">'django.contrib.messages',</span>
+    <span class="cm">'django.contrib.staticfiles',</span>
+    <span class="hl">'tasks',   &lt;— dopisz tę linię</span>
+]</pre>
+    </div>
+    <p>Zapisz plik przyciskiem na karcie — w prawdziwym VS Code wystarczy <kbd>Ctrl</kbd>+<kbd>S</kbd>.</p>
+  </div>
+</section>
+<!-- KROK 7 -->
+<section class="sec" id="st7">
+  <div class="sec-head"><div class="sec-num">07</div><h2>Utworzenie pierwszego widoku</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p><strong>Widok</strong> to funkcja, która przyjmuje żądanie (<code>request</code>) i zwraca odpowiedź. Otwórz
+    <code>tasks/views.py</code> i wpisz:</p>
+    <div class="file" data-file="tasks/views.py" data-need="app">
+      <div class="file-head"><span class="fname">tasks/views.py</span>
+      <button class="fbtn" data-a="save" data-file="tasks/views.py">Zapisz plik</button></div>
+      <pre><span class="hl">from django.shortcuts import render</span>
+
+def index(request):
+    tasks = [
+        "Nauczyć się Django",
+        "Utworzyć pierwszy widok",
+        "Przygotować szablon HTML",
+        "Uruchomić aplikację",
+    ]
+    return render(request, <span class="hl">"tasks/index.html"</span>, {
+        "tasks": tasks,
+    })</pre>
+    </div>
+    <p>Widok przygotowuje <strong>dane</strong> (listę zadań) i przekazuje je do szablonu HTML funkcją
+    <code>render()</code>. Tak właśnie przesyła się dane z Pythona do HTML.</p>
+  </div>
+</section>
+<!-- KROK 8 -->
+<section class="sec" id="st8">
+  <div class="sec-head"><div class="sec-num">08</div><h2>Podłączenie adresów URL</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p>Teraz musimy powiedzieć Django: <em>„kto odpowiada na adres <code>/</code>?”</em>. Otwórz
+    <code>todo_project/urls.py</code> i zmień zawartość na:</p>
+    <div class="file" data-file="todo_project/urls.py" data-need="app">
+      <div class="file-head"><span class="fname">todo_project/urls.py</span>
+      <button class="fbtn" data-a="save" data-file="todo_project/urls.py">Zapisz plik</button></div>
+      <pre>from django.contrib import admin
+from django.urls import path
+<span class="hl">from tasks.views import index</span>
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    <span class="hl">path('', index),</span>
+]</pre>
+    </div>
+    <p>Ścieżka <code>''</code> (pusty adres) to <strong>strona główna</strong>. Kolejność jest istotna: Django sprawdza
+    <code>urlpatterns</code> od góry i wybiera pierwsze dopasowanie.</p>
+  </div>
+</section>
+<!-- KROK 9 -->
+<section class="sec" id="st9">
+  <div class="sec-head"><div class="sec-num">09</div><h2>Szablon HTML</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p>Widok zwraca <code>"tasks/index.html"</code>, więc taki plik musimy utworzyć. W folderze <code>tasks</code>
+    utwórz strukturę <code>templates/tasks/</code>, a w niej plik <code>index.html</code>:</p>
+    <div class="tree">tasks/
+├── templates/
+│   └── tasks/
+│       └── <b>index.html</b>   ← nowy plik
+├── views.py
+└── …</div>
+    <p>Wpisz do niego kod poniżej. Zwróć uwagę na znaczniki Django: <code>{% for %}</code> to <strong>logika</strong>
+    (pętla po zadaniach), a <code>{{ task }}</code> wstawia <strong>wartość</strong>:</p>
+    <div class="file" data-file="tasks/templates/tasks/index.html" data-need="app">
+      <div class="file-head"><span class="fname">tasks/templates/tasks/index.html</span>
+      <button class="fbtn" data-a="save" data-file="tasks/templates/tasks/index.html">Zapisz plik</button></div>
+      <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="pl"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Lista zadań&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Moja lista zadań&lt;/h1&gt;
+    &lt;ul&gt;
+    <span class="hl">{% for task in tasks %}</span>
+        &lt;li&gt;<span class="hl">{{ task }}</span>&lt;/li&gt;
+    <span class="hl">{% endfor %}</span>
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+    </div>
+  </div>
+</section>
+<!-- KROK 10 -->
+<section class="sec" id="st10">
+  <div class="sec-head"><div class="sec-num">10</div><h2>Podgląd w przeglądarce</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p>Włącz serwer ponownie i zobacz efekt swojej pracy:</p>
+    <div class="cmd"><span class="ps">PS&gt;</span><span class="c">python manage.py runserver</span>
+      <span class="ops"><button data-a="put" data-cmd="python manage.py runserver">Wstaw</button><button class="run" data-a="run" data-cmd="python manage.py runserver">Uruchom</button></span></div>
+    <p>Otwórz <code>http://127.0.0.1:8000/</code> w karcie <strong>Przeglądarka</strong>. Powinna pojawić się lista
+    zadań — dokładnie ta, którą wpisałeś w <code>views.py</code>.</p>
+    <div class="note"><span class="i">👀</span><span><strong>Przepływ danych:</strong> przeglądarka → URL → <code>views.py</code> →
+    dane → szablon HTML → strona WWW. Jeśli zobaczysz błąd <code>TemplateDoesNotExist</code>, sprawdź krok 9
+    (nazwa i lokalizacja pliku).</span></div>
+  </div>
+</section>
+<!-- KROK 11 -->
+<section class="sec" id="st11">
+  <div class="sec-head"><div class="sec-num">11</div><h2>Dodanie CSS</h2><span class="time">⏱ 5 minut</span></div>
+  <div class="sec-body">
+    <p>Teraz poprawimy wygląd strony. W folderze <code>tasks</code> utwórz folder <code>static/</code>, w nim
+    <code>tasks/</code>, a następnie plik <code>style.css</code>:</p>
+    <div class="tree">tasks/
+├── static/
+│   └── tasks/
+│       └── <b>style.css</b>   ← nowy plik
+└── templates/tasks/index.html</div>
+    <div class="file" data-file="tasks/static/tasks/style.css" data-need="app">
+      <div class="file-head"><span class="fname">tasks/static/tasks/style.css</span>
+      <button class="fbtn" data-a="save" data-file="tasks/static/tasks/style.css">Zapisz plik</button></div>
+      <pre>body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 40px;
+}
+.container {
+    max-width: 600px;
+    margin: auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+}
+h1 { color: #333; }
+li {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #e8f0fe;
+    border-radius: 5px;
+}</pre>
+    </div>
+    <p>Żeby podpiąć arkusz, zmień <code>tasks/templates/tasks/index.html</code>: dodaj na górze
+    <code>{% load static %}</code> oraz link do pliku w <code>&lt;head&gt;</code>, a listę zawiń w kontener:</p>
+    <div class="file" data-file="tasks/templates/tasks/index.html" data-need="app" data-v="2">
+      <div class="file-head"><span class="fname">tasks/templates/tasks/index.html <em>(wersja 2)</em></span>
+      <button class="fbtn" data-a="save" data-file="tasks/templates/tasks/index.html" data-v="2">Zapisz plik</button></div>
+      <pre><span class="hl">{% load static %}</span>
+&lt;!DOCTYPE html&gt;
+&lt;html lang="pl"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Lista zadań&lt;/title&gt;
+    <span class="hl">&lt;link rel="stylesheet" href="{% static 'tasks/style.css' %}"&gt;</span>
+&lt;/head&gt;
+&lt;body&gt;
+    <span class="hl">&lt;div class="container"&gt;</span>
+        &lt;h1&gt;Moja lista zadań&lt;/h1&gt;
+        &lt;ul&gt;
+        {% for task in tasks %}
+            &lt;li&gt;{{ task }}&lt;/li&gt;
+        {% endfor %}
+        &lt;/ul&gt;
+    <span class="hl">&lt;/div&gt;</span>
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+    </div>
+    <div class="note"><span class="i">💡</span><span><code>{% static 'tasks/style.css' %}</code> zamienia się na prawdziwy
+    adres pliku statycznego. Katalog statycznych nosi nazwę aplikacji, żeby pliki różnych aplikacji się nie mieszały.</span></div>
+    <p>Odśwież stronę w karcie <strong>Przeglądarka</strong> — wygląda zupełnie inaczej! 🎨</p>
+  </div>
+</section>
+<!-- KROK 12 -->
+<section class="sec" id="st12">
+  <div class="sec-head"><div class="sec-num">12</div><h2>Zadania dla ucznia</h2><span class="time">⏱ 10 minut</span></div>
+  <div class="sec-body">
+    <p>Teraz samodzielnie rozbuduj aplikację. Odhacz kolejne zadania — podpowiedzi są w treści każdej karty.</p>
+    <div class="tasks">
+      <div class="tsk" data-task="1"><label class="th"><input type="checkbox" data-task="1">
+        <span>Zadanie 1 — dodaj kolejne zadania</span></label>
+        <p>W <code>views.py</code> dodaj <strong>minimum 3 własne zadania</strong>, np. dotyczące HTML, CSS,
+        Pythona, baz danych, JavaScriptu.</p></div>
+      <div class="tsk" data-task="2"><label class="th"><input type="checkbox" data-task="2">
+        <span>Zadanie 2 — dodaj numerowanie</span></label>
+        <p>Zamiast listy <code>&lt;ul&gt;</code> wykorzystaj <code>&lt;ol&gt;</code> — wynik: 1. Nauczyć się Django,
+        2. Utworzyć pierwszy widok…</p></div>
+      <div class="tsk" data-task="3"><label class="th"><input type="checkbox" data-task="3">
+        <span>Zadanie 3 — dodaj informację</span></label>
+        <p>Pod listą wyświetl <strong>Liczba zadań: 4</strong>. Podpowiedź: w widoku dodaj
+        <code>"number": len(tasks)</code>, a w HTML — <code>&lt;p&gt;Liczba zadań: {{ number }}&lt;/p&gt;</code>.</p></div>
+      <div class="tsk" data-task="4"><label class="th"><input type="checkbox" data-task="4">
+        <span>Zadanie 4 — zmień wygląd</span></label>
+        <p>Zmodyfikuj <code>style.css</code>: inny kolor nagłówka, inne tło zadań, większe marginesy strony,
+        zaokrąglone rogi elementów listy.</p></div>
+    </div>
+  </div>
+</section>
+<!-- KROK 13 (bonus) -->
+<section class="sec" id="st13">
+  <div class="sec-head"><div class="sec-num">＋</div><h2>Bonus: Formularz ucznia</h2><span class="time">⏱ 30 minut</span></div>
+  <div class="sec-body">
+    <p>Druga część ćwiczeń z lekcji: własny projekt <code>mojprojekt</code> z formularzem, który <strong>przyjmuje dane</strong>
+    metodą POST i wyświetla je na osobnej stronie. Kroki powtarzają schemat listy zadań — poniżej skrót z gotowym kodem.</p>
+    <details class="hint"><summary>Krok B1 — projekt i aplikacja</summary>
+      <div class="cmd"><span class="ps">PS&gt;</span><span class="c">django-admin startproject mojprojekt .</span>
+        <span class="ops"><button data-a="put" data-cmd="django-admin startproject mojprojekt .">Wstaw</button></span></div>
+      <div class="cmd"><span class="ps">PS&gt;</span><span class="c">python manage.py startapp formularz</span>
+        <span class="ops"><button data-a="put" data-cmd="python manage.py startapp formularz">Wstaw</button></span></div>
+      <p style="margin:10px 0 0">Utwórz folder <code>formularz_django</code>, venv (<code>python -m venv venv</code> →
+      <code>venv\Scripts\activate</code> → <code>pip install django</code>) i dopisz <code>'formularz',</code> do
+      <code>INSTALLED_APPS</code>.</p>
+    </details>
+    <details class="hint"><summary>Krok B2 — widok i szablon formularza</summary>
+      <p>W <code>formularz/views.py</code>:</p>
+      <div class="file"><div class="file-head"><span class="fname">formularz/views.py</span></div>
+      <pre>from django.shortcuts import render
+
+def formularz(request):
+    return render(request, 'formularz.html')</pre></div>
+      <p>W folderze <code>formularz</code> utwórz <code>templates/</code>, a w nim <code>formularz.html</code>:</p>
+      <div class="file"><div class="file-head"><span class="fname">formularz/templates/formularz.html</span></div>
+      <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="pl"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Formularz ucznia&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Formularz ucznia&lt;/h1&gt;
+    &lt;form method="post"&gt;
+        <span class="hl">{% csrf_token %}</span>
+        &lt;label&gt;Imię:&lt;/label&gt;
+        &lt;input type="text" name="imie"&gt;
+        &lt;br&gt;&lt;br&gt;
+        &lt;label&gt;Nazwisko:&lt;/label&gt;
+        &lt;input type="text" name="nazwisko"&gt;
+        &lt;br&gt;&lt;br&gt;
+        &lt;label&gt;Klasa:&lt;/label&gt;
+        &lt;input type="text" name="klasa"&gt;
+        &lt;br&gt;&lt;br&gt;
+        &lt;button type="submit"&gt;Wyślij&lt;/button&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre></div>
+      <div class="note"><span class="i">🔐</span><span><code>{% csrf_token %}</code> dodaje ukryty token ochrony przed
+      CSRF — bez niego Django odrzuci żądanie POST.</span></div>
+    </details>
+    <details class="hint"><summary>Krok B3 — adresy URL</summary>
+      <div class="file"><div class="file-head"><span class="fname">mojprojekt/urls.py</span></div>
+      <pre>from django.contrib import admin
+from django.urls import path
+<span class="hl">from formularz.views import formularz</span>
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    <span class="hl">path('', formularz),</span>
+]</pre></div>
+    </details>
+    <details class="hint"><summary>Krok B4 — obsługa POST i strona wyniku</summary>
+      <p>Zmień widok tak, aby odbierał dane z formularza:</p>
+      <div class="file"><div class="file-head"><span class="fname">formularz/views.py <em>(wersja 2)</em></span></div>
+      <pre>def formularz(request):
+    <span class="hl">if request.method == 'POST':</span>
+        imie = <span class="hl">request.POST.get('imie')</span>
+        nazwisko = request.POST.get('nazwisko')
+        klasa = request.POST.get('klasa')
+        return render(request, 'wynik.html', {
+            'imie': imie,
+            'nazwisko': nazwisko,
+            'klasa': klasa
+        })
+    return render(request, 'formularz.html')</pre></div>
+      <p>W <code>templates/</code> utwórz <code>wynik.html</code>:</p>
+      <div class="file"><div class="file-head"><span class="fname">formularz/templates/wynik.html</span></div>
+      <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="pl"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Wynik&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Dane ucznia&lt;/h1&gt;
+    &lt;p&gt;Imię: <span class="hl">{{ imie }}</span>&lt;/p&gt;
+    &lt;p&gt;Nazwisko: {{ nazwisko }}&lt;/p&gt;
+    &lt;p&gt;Klasa: {{ klasa }}&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre></div>
+      <p>Uruchom <code>python manage.py runserver</code>, wpisz dane w formularzu i kliknij <strong>Wyślij</strong>.
+      Django odbierze dane (<code>imie</code>, <code>nazwisko</code>, <code>klasa</code>) i przekaże je do
+      <code>wynik.html</code>.</p>
+    </details>
+    <div class="note"><span class="i">🎓</span><span><strong>Co powinieneś umieć po tym ćwiczeniu:</strong> HTML tworzy
+    formularz · <code>views.py</code> odbiera żądanie · <code>request.POST</code> zawiera dane wysłane formularzem ·
+    <code>render()</code> wyświetla stronę HTML · <code>{{ imie }}</code> wyświetla dane przekazane z Pythona do HTML.</span></div>
+  </div>
+</section>
+<!-- KROK 14 -->
+<section class="sec" id="st14">
+  <div class="sec-head"><div class="sec-num">★</div><h2>Ściąga i quiz</h2><span class="time">✍️ powtórkowo</span></div>
+  <div class="sec-body">
+    <h3 style="color:var(--text);font-size:1rem;margin:4px 0 2px">Wszystkie polecenia z kursu</h3>
+    <table class="tbl">
+      <tr><th>Polecenie</th><th>Co robi</th></tr>
+      <tr><td>python --version</td><td>sprawdza wersję Pythona (alternatywnie <kbd>py --version</kbd>)</td></tr>
+      <tr><td>python -m venv venv</td><td>tworzy środowisko wirtualne w folderze <code>venv/</code></td></tr>
+      <tr><td>venv\Scripts\activate</td><td>aktywuje środowisko (znak <code>(venv)</code> w terminalu)</td></tr>
+      <tr><td>pip install django</td><td>instaluje Django</td></tr>
+      <tr><td>django-admin --version</td><td>pokazuje zainstalowaną wersję Django</td></tr>
+      <tr><td>django-admin startproject todo_project .</td><td>tworzy projekt w bieżącym folderze (kropka!)</td></tr>
+      <tr><td>python manage.py runserver</td><td>uruchamia serwer na <code>127.0.0.1:8000</code> (stop: <kbd>Ctrl</kbd>+<kbd>C</kbd>)</td></tr>
+      <tr><td>python manage.py startapp tasks</td><td>tworzy aplikację <code>tasks</code></td></tr>
+      <tr><td>python manage.py</td><td>lista wszystkich poleceń zarządzania</td></tr>
+    </table>
+    <h3 style="color:var(--text);font-size:1rem;margin:16px 0 2px">Przepływ danych w Django</h3>
+    <div class="flow">
+      <div class="fstep">przeglądarka</div><div class="fa">↓</div>
+      <div class="fstep">URL (urls.py)</div><div class="fa">↓</div>
+      <div class="fstep">views.py</div><div class="fa">↓</div>
+      <div class="fstep">dane</div><div class="fa">↓</div>
+      <div class="fstep">template HTML</div><div class="fa">↓</div>
+      <div class="fstep">CSS</div><div class="fa">↓</div>
+      <div class="fstep">strona WWW</div>
+    </div>
+    <h3 style="color:var(--text);font-size:1rem;margin:16px 0 2px">Quiz — sprawdź się</h3>
+    <div class="quiz" id="quiz">
+      <div class="qi"><div class="qq2">1. Czym różni się projekt Django od aplikacji Django?</div>
+        <label><input type="radio" name="q1" data-good="1"><span>Projekt to cały system, a aplikacja realizuje konkretną część jego funkcjonalności</span></label>
+        <label><input type="radio" name="q1"><span>Aplikacja zawiera projekt, a nie odwrotnie</span></label>
+        <label><input type="radio" name="q1"><span>To dwa różne nazwy tego samego</span></label></div>
+      <div class="qi"><div class="qq2">2. Po co używamy środowiska wirtualnego (venv)?</div>
+        <label><input type="radio" name="q2"><span>Przyspiesza działanie Django</span></label>
+        <label><input type="radio" name="q2" data-good="1"><span>Izoluje biblioteki projektu od innych projektów</span></label>
+        <label><input type="radio" name="q2"><span>Jest wymagane przez przeglądarkę</span></label></div>
+      <div class="qi"><div class="qq2">3. Po co kropka na końcu polecenia <code>django-admin startproject todo_project .</code>?</div>
+        <label><input type="radio" name="q3" data-good="1"><span>Projekt powstaje w bieżącym folderze, bez dodatkowego podfolderu</span></label>
+        <label><input type="radio" name="q3"><span>Ustawia wersję Django na najnowszą</span></label>
+        <label><input type="radio" name="q3"><span>Otwiera projekt w VS Code</span></label></div>
+      <div class="qi"><div class="qq2">4. Co robi funkcja <code>render(request, "tasks/index.html", {...})</code>?</div>
+        <label><input type="radio" name="q4"><span>Instaluje szablon z internetu</span></label>
+        <label><input type="radio" name="q4"><span>Tworzy folder templates</span></label>
+        <label><input type="radio" name="q4" data-good="1"><span>Ładuje szablon HTML, wstrzykuje dane i zwraca odpowiedź do przeglądarki</span></label></div>
+      <div class="qi"><div class="qq2">5. Gdzie mapujemy adres URL na widok?</div>
+        <label><input type="radio" name="q5"><span>W tasks/settings.py</span></label>
+        <label><input type="radio" name="q5" data-good="1"><span>W todo_project/urls.py, na liście urlpatterns</span></label>
+        <label><input type="radio" name="q5"><span>W index.html</span></label></div>
+      <div class="qi"><div class="qq2">6. Co zawiera <code>request.POST</code>?</div>
+        <label><input type="radio" name="q6" data-good="1"><span>Dane wysłane formularzem metodą POST</span></label>
+        <label><input type="radio" name="q6"><span>Kod HTML strony</span></label>
+        <label><input type="radio" name="q6"><span>Ustawienia INSTALLED_APPS</span></label></div>
+      <button class="qbtn" data-a="quizcheck">Sprawdź odpowiedzi</button>
+      <div class="qres" id="qres"></div>
+    </div>
+  </div>
+</section>
+</main>
+<footer>
+  <span>🚀 <strong>Django od zera</strong> — interaktywny materiał do ćwiczeń (lista zadań · CW2 + formularz ucznia)</span>
+  <span>Strona działa w całości offline — postęp w localStorage · Python → Django → URL → View → Template → HTML → CSS</span>
+</footer>
+</div>
+<!-- PANEL: terminal / pliki / przeglądarka -->
+<div class="deck" id="deck">
+  <div class="deckbar">
+    <button class="tab on" data-tab="term"><span class="tglyph">▮</span> Terminal</button>
+    <button class="tab" data-tab="files"><span class="tglyph">🗂</span> Pliki</button>
+    <button class="tab" data-tab="brow"><span class="tglyph">🌐</span> Przeglądarka</button>
+    <div class="dstat">
+      <span class="stchip" id="chvenv" title="Środowisko wirtualne aktywne">venv</span>
+      <span class="stchip" id="chsrv" title="Serwer developerski działa">serwer</span>
+      <button class="dbtn" id="ctrlc" title="Zatrzymaj serwer (Ctrl+C)">Ctrl+C</button>
+      <button class="dbtn" id="termbtn" title="Zwiń / rozwiń panel">▾</button>
+    </div>
+  </div>
+  <div class="deckbody">
+    <div class="view term on" id="v-term">
+      <div class="termout" id="tout"></div>
+      <div class="hintline" id="hintline"><b>⏭</b><span class="hc" id="hintc">…</span></div>
+      <div class="inrow">
+        <span class="ps1" id="ps1">PS C:\Users\Uczen\Desktop&gt;</span>
+        <input id="tin" type="text" autocomplete="off" spellcheck="false" autocapitalize="off"
+          placeholder="tu wpisujesz polecenia i zatwierdzasz Enterem — np. python --version" aria-label="Terminal — wpisz polecenie">
+      </div>
+    </div>
+    <div class="view files" id="v-files">
+      <div class="ftree" id="ftree"></div>
+      <div class="fview" id="fview"><div class="fvnote">Kliknij plik w drzewie, aby go podejrzeć.<br><br>
+        Pliki pojawiają się tu po wykonaniu odpowiednich poleceń w terminalu:
+        <code>python -m venv venv</code> tworzy <code>venv/</code>, <code>django-admin startproject todo_project .</code>
+        tworzy pliki projektu, a <code>python manage.py startapp tasks</code> — katalog aplikacji.</div></div>
+    </div>
+    <div class="view brow" id="v-brow">
+      <div class="bchrome">
+        <div class="bbtns"><i></i><i></i><i></i></div>
+        <div class="baddr"><span>🔒</span><input id="baddr" value="http://127.0.0.1:8000/" aria-label="Pasek adresu"></div>
+        <button class="dbtn" id="bgo">Odśwież</button>
+      </div>
+      <div class="bpage" id="bpage"></div>
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+/* ============ skróty ============ */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============ stan ============ */
+const LS = 'dj-kurs-v1';
+const S = {
+  cwdPath: ['C:','Users','Uczen','Desktop'],
+  venvMade:false, venvOn:false, djangoOk:false, projectMade:false, appMade:false,
+  serverOn:false, serverSeen:false, listaSeen:false, nested:false, dirMkdir:false,
+  saved:{}, done:{}, tasksChk:{}, quizAns:{}, quizScore:null,
+  history:[], hIdx:-1
+};
+function save(){
+  try{ localStorage.setItem(LS, JSON.stringify({
+    cwdPath:S.cwdPath, venvMade:S.venvMade, venvOn:S.venvOn, djangoOk:S.djangoOk,
+    projectMade:S.projectMade, appMade:S.appMade, serverSeen:S.serverSeen, listaSeen:S.listaSeen,
+    dirMkdir:S.dirMkdir, nested:S.nested, saved:S.saved, done:S.done, tasksChk:S.tasksChk,
+    quizAns:S.quizAns, quizScore:S.quizScore, history:S.history
+  })); }catch(e){}
+}
+function load(){
+  try{ const d = JSON.parse(localStorage.getItem(LS) || 'null');
+    if(d) Object.assign(S, d, {serverOn:false});
+  }catch(e){}
+}
+const cwdStr = () => S.cwdPath.join('\\');
+const cwdLast = () => S.cwdPath[S.cwdPath.length-1];
+const inProject = () => cwdLast() === 'django_cwiczenie';
+
+/* ============ treść plików ============ */
+const SET_BASE = "# Ustawienia projektu todo_project.\nfrom pathlib import Path\n\nBASE_DIR = Path(__file__).resolve().parent.parent\nSECRET_KEY = 'django-insecure-podgladowy-klucz-do-cwiczen'\nDEBUG = True\nALLOWED_HOSTS = []\n\nINSTALLED_APPS = [\n    'django.contrib.admin',\n    'django.contrib.auth',\n    'django.contrib.contenttypes',\n    'django.contrib.sessions',\n    'django.contrib.messages',\n    'django.contrib.staticfiles',\n";
+const FILEB = {
+  'todo_project/settings.py': () => S.saved['todo_project/settings.py']
+    ? SET_BASE + "    'tasks',\n]\n\n# ... MIDDLEWARE, TEMPLATES, DATABASES itd. bez zmian ...\n"
+    : SET_BASE + "]\n\n# ... MIDDLEWARE, TEMPLATES, DATABASES itd. bez zmian ...\n",
+  'todo_project/urls.py': () => S.saved['todo_project/urls.py']
+    ? "from django.contrib import admin\nfrom django.urls import path\nfrom tasks.views import index\n\nurlpatterns = [\n    path('admin/', admin.site.urls),\n    path('', index),\n]"
+    : "from django.contrib import admin\nfrom django.urls import path\n\nurlpatterns = [\n    path('admin/', admin.site.urls),\n]",
+  'tasks/views.py': () => S.saved['tasks/views.py']
+    ? "from django.shortcuts import render\n\ndef index(request):\n    tasks = [\n        \"Nauczyć się Django\",\n        \"Utworzyć pierwszy widok\",\n        \"Przygotować szablon HTML\",\n        \"Uruchomić aplikację\",\n    ]\n    return render(request, \"tasks/index.html\", {\n        \"tasks\": tasks,\n    })"
+    : "from django.shortcuts import render\n\n# Utwórz tutaj swoje widoki.\n# Więcej informacji: https://docs.djangoproject.com/pl/5.1/topics/http/views/",
+  'tasks/templates/tasks/index.html': () => S.saved['tasks/templates/tasks/index.html'] === '2'
+    ? "{% load static %}\n<!DOCTYPE html>\n<html lang=\"pl\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Lista zadań</title>\n    <link rel=\"stylesheet\" href=\"{% static 'tasks/style.css' %}\">\n</head>\n<body>\n    <div class=\"container\">\n        <h1>Moja lista zadań</h1>\n        <ul>\n        {% for task in tasks %}\n            <li>{{ task }}</li>\n        {% endfor %}\n        </ul>\n    </div>\n</body>\n</html>"
+    : "<!DOCTYPE html>\n<html lang=\"pl\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Lista zadań</title>\n</head>\n<body>\n    <h1>Moja lista zadań</h1>\n    <ul>\n    {% for task in tasks %}\n        <li>{{ task }}</li>\n    {% endfor %}\n    </ul>\n</body>\n</html>",
+  'tasks/static/tasks/style.css': () => "body {\n    font-family: Arial, sans-serif;\n    background-color: #f2f2f2;\n    margin: 40px;\n}\n.container {\n    max-width: 600px;\n    margin: auto;\n    background-color: white;\n    padding: 30px;\n    border-radius: 10px;\n}\nh1 { color: #333; }\nli {\n    margin: 10px 0;\n    padding: 10px;\n    background-color: #e8f0fe;\n    border-radius: 5px;\n}",
+  'manage.py': () => "#!/usr/bin/env python\n\"\"\"Narzędzie wiersza poleceń Django do zadań administracyjnych.\"\"\"\nimport os\nimport sys\n\ndef main():\n    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'todo_project.settings')\n    from django.core.management import execute_from_command_line\n    execute_from_command_line(sys.argv)\n\nif __name__ == '__main__':\n    main()",
+  'todo_project/__init__.py': () => "# (plik pusty — oznacza pakiet Pythona)",
+  'todo_project/asgi.py': () => "import os\nfrom django.core.asgi import get_asgi_application\n\nos.environ.setdefault('DJANGO_SETTINGS_MODULE', 'todo_project.settings')\napplication = get_asgi_application()",
+  'todo_project/wsgi.py': () => "import os\nfrom django.core.wsgi import get_wsgi_application\n\nos.environ.setdefault('DJANGO_SETTINGS_MODULE', 'todo_project.settings')\napplication = get_wsgi_application()",
+  'tasks/__init__.py': () => "# (plik pusty — oznacza pakiet Pythona)",
+  'tasks/admin.py': () => "from django.contrib import admin\n\n# Zarejestruj tu swoje modele.",
+  'tasks/apps.py': () => "from django.apps import AppConfig\n\nclass TasksConfig(AppConfig):\n    default_auto_field = 'django.db.models.BigAutoField'\n    name = 'tasks'",
+  'tasks/models.py': () => "from django.db import models\n\n# Utwórz tu swoje modele.",
+  'tasks/tests.py': () => "from django.test import TestCase\n\n# Utwórz tu swoje testy."
+};
+
+/* ============ drzewo plików ============ */
+function buildTree(){
+  const t = {name:'Desktop (C:\\Users\\Uczen\\Desktop)', dir:true, open:true, kids:[]};
+  if(!S.dirMkdir) return t;
+  const root = {name:'django_cwiczenie', dir:true, open:true, kids:[]};
+  t.kids.push(root);
+  if(S.venvMade) root.kids.push({name:'venv', dir:true, kids:[
+    {name:'Lib', dir:true, kids:[]},{name:'Scripts', dir:true, kids:[]},{name:'pyvenv.cfg', path:'venv/pyvenv.cfg'}]});
+  if(S.projectMade){
+    root.kids.push({name:'manage.py', path:'manage.py'});
+    root.kids.push({name:'todo_project', dir:true, open:true, kids:[
+      {name:'__init__.py', path:'todo_project/__init__.py'},
+      {name:'settings.py', path:'todo_project/settings.py'},
+      {name:'urls.py', path:'todo_project/urls.py'},
+      {name:'asgi.py', path:'todo_project/asgi.py'},
+      {name:'wsgi.py', path:'todo_project/wsgi.py'}
+    ]});
+  }
+  if(S.appMade){
+    const tasks = {name:'tasks', dir:true, open:true, kids:[
+      {name:'__init__.py', path:'tasks/__init__.py'},
+      {name:'admin.py', path:'tasks/admin.py'},
+      {name:'apps.py', path:'tasks/apps.py'},
+      {name:'migrations', dir:true, kids:[{name:'__init__.py', path:'tasks/migrations/__init__.py'}]},
+      {name:'models.py', path:'tasks/models.py'},
+      {name:'tests.py', path:'tasks/tests.py'},
+      {name:'views.py', path:'tasks/views.py'}
+    ]};
+    if(S.saved['tasks/templates/tasks/index.html'])
+      tasks.kids.splice(1,0,{name:'templates', dir:true, open:true, kids:[
+        {name:'tasks', dir:true, open:true, kids:[{name:'index.html', path:'tasks/templates/tasks/index.html'}]}]});
+    if(S.saved['tasks/static/tasks/style.css'])
+      tasks.kids.splice(1,0,{name:'static', dir:true, open:true, kids:[
+        {name:'tasks', dir:true, open:true, kids:[{name:'style.css', path:'tasks/static/tasks/style.css'}]}]});
+    root.kids.push(tasks);
+  }
+  return t;
+}
+function iconFor(name){
+  if(name.endsWith('.py')) return '🐍';
+  if(name.endsWith('.html')) return '🌐';
+  if(name.endsWith('.css')) return '🎨';
+  if(name.endsWith('.cfg')) return '⚙️';
+  return '📄';
+}
+function renderTree(){
+  const el = $('#ftree');
+  const html = node => {
+    if(node.dir){
+      const kids = (node.kids||[]).map(n=>html(n)).join('');
+      return `<div class="fnode open" data-dir="1"><span class="car">▶</span><span class="fi">📁</span><span>${esc(node.name)}</span><div class="kids">${kids}</div></div>`;
+    }
+    const exists = node.path && !!FILEB[node.path];
+    return `<div class="fnode${exists?'':' dim'}" data-path="${node.path||''}"><span class="fi">${iconFor(node.name)}</span><span>${esc(node.name)}</span></div>`;
+  };
+  el.innerHTML = html(buildTree());
+  el.querySelectorAll('.fnode[data-dir]').forEach(d=>{
+    d.querySelector(':scope > .car').addEventListener('click', e=>{ e.stopPropagation(); d.classList.toggle('open'); });
+  });
+  el.querySelectorAll('.fnode[data-path]').forEach(d=>{
+    d.addEventListener('click', ()=>{
+      el.querySelectorAll('.fnode.act').forEach(x=>x.classList.remove('act'));
+      d.classList.add('act'); showFile(d.dataset.path);
+    });
+  });
+}
+function showFile(path){
+  const v = $('#fview');
+  const body = path && FILEB[path] ? FILEB[path]() : null;
+  if(body === null){
+    v.innerHTML = `<div class="fvname">📄 ${esc(path || '?')}</div>
+      <div class="fvnote">Ten plik pojawi się po wykonaniu odpowiedniego kroku w terminalu.
+      ${path === 'venv/pyvenv.cfg' ? 'W <code>venv/</code> mieszkają zainstalowane biblioteki (tu: Django).' : 'Sprawdź podpowiedź w kroku kursu.'}</div>`;
+    return;
+  }
+  v.innerHTML = `<div class="fvname">📄 ${esc(path)} <span class="stchip">${S.saved[path]?'✓ edytowany':'wygenerowany'}</span></div><pre>${esc(body)}</pre>`;
+}
+
+/* ============ przeglądarka ============ */
+const TASKS = ['Nauczyć się Django','Utworzyć pierwszy widok','Przygotować szablon HTML','Uruchomić aplikację'];
+function renderBrowser(){
+  const addr = ($('#baddr').value || '').trim();
+  const m = /^https?:\/\/(localhost|127\.0\.0\.1)(:(\d+))?\/?(.*)$/i.exec(addr);
+  const pg = $('#bpage');
+  if(!m){
+    pg.innerHTML = `<div class="pg pg-ref"><div class="e">🛰️</div><h3>Nie można znaleźć tej strony</h3>
+      <p>W symulowanej przeglądarce działa tylko serwer Django pod adresem <strong>http://127.0.0.1:8000/</strong>.</p>
+      <span class="c2">Sprawdź pasek adresu u góry</span></div>`;
+    return;
+  }
+  const port = m[3] || '80';
+  const path = (m[4] || '').replace(/\/+$/,'').toLowerCase();
+  if(!S.serverOn){
+    pg.innerHTML = `<div class="pg pg-ref"><div class="e">🔌</div><h3>127.0.0.1 odrzucił połączenie</h3>
+      <p>Nie można uzyskać dostępu do tej strony — serwer developerski nie działa.</p>
+      <span class="c2">ERR_CONNECTION_REFUSED</span>
+      <p style="margin-top:10px;color:#8792a1">Uruchom serwer: <strong>python manage.py runserver</strong></p></div>`;
+    return;
+  }
+  if(port !== '8000'){
+    pg.innerHTML = `<div class="pg pg-ref"><div class="e">🔌</div><h3>Połączenie odrzucone</h3>
+      <p>Na porcie <strong>${esc(port)}</strong> nic nie nasłuchuje. Serwer developerski Django domyślnie
+      działa na porcie <strong>8000</strong>.</p>
+      <span class="c2">ERR_CONNECTION_REFUSED</span></div>`;
+    return;
+  }
+  if(path === 'admin'){
+    pg.innerHTML = `<div class="pg pg-admin"><div class="abox">
+      <h3>Panel administracyjny | Django</h3>
+      <label>Nazwa użytkownika:</label><input type="text" value="admin" readonly>
+      <label>Hasło:</label><input type="password" placeholder="••••••••" readonly>
+      <div class="alog">Zaloguj się</div>
+      <p>Do zalogowania potrzebny jest superużytkownik: python manage.py createsuperuser — poznasz go
+      na kolejnych lekcjach.</p></div></div>`;
+    return;
+  }
+  if(!S.saved['todo_project/urls.py']){
+    pg.innerHTML = `<div class="pg pg-rocket"><div class="pg-pad">
+      <div class="r">🚀</div><h3>Instalacja zakończyła się pomyślnie!</h3>
+      <p>Gratulacje — Twoja pierwsza strona Django <strong>działa</strong>. Ta strona z rakietą pojawia się
+      zawsze, gdy projekt jest poprawnie skonfigurowany, ale nie ma jeszcze własnych adresów URL.</p>
+      <div class="box">Następny krok: podłącz widok w <code>todo_project/urls.py</code> (krok 8 kursu).</div>
+    </div></div>`;
+    return;
+  }
+  if(!S.saved['tasks/templates/tasks/index.html']){
+    pg.innerHTML = `<div class="pg pg-debug"><div class="dt">TemplateDoesNotExist at /</div>
+      <div class="db"><h4>TemplateDoesNotExist</h4>
+      <span class="exc">django.template.exceptions.TemplateDoesNotExist: tasks/index.html</span>
+      <p style="margin-top:10px;font-family:var(--sans)">Django nie znalazł pliku szablonu. Sprawdź krok 9:
+      <strong>tasks/templates/tasks/index.html</strong> — nazwa folderu <code>templates</code>
+      i pełna ścieżka muszą się zgadzać.</p></div></div>`;
+    return;
+  }
+  S.listaSeen = true;
+  const v2 = S.saved['tasks/templates/tasks/index.html'] === '2';
+  const cnt = v2 ? `<div class="cnt">Liczba zadań: ${TASKS.length}</div>` : '';
+  const list = TASKS.map(t=>`<li>${esc(t)}</li>`).join('');
+  pg.innerHTML = `<div class="pg pg-stud"><div class="container">
+    <h1>Moja lista zadań</h1>
+    <ul>${list}</ul>
+    ${cnt}
+  </div></div>`;
+  save();
+}
+
+/* ============ terminal ============ */
+const tout = $('#tout'), tin = $('#tin');
+let nearBottom = true;
+tout.addEventListener('scroll', ()=>{ nearBottom = tout.scrollHeight - tout.scrollTop - tout.clientHeight < 80; });
+function scrollDown(){ if(nearBottom) tout.scrollTop = tout.scrollHeight; }
+function line(html, cls){
+  const d = document.createElement('div');
+  d.className = 'tline ' + (cls||'l-out');
+  d.innerHTML = html;
+  tout.appendChild(d);
+  while(tout.children.length > 400) tout.firstChild.remove();
+  scrollDown(); return d;
+}
+function psHtml(){ return (S.venvOn ? '<span class="v">(venv)</span> ' : '') +
+  '<span class="ps">PS ' + esc(cwdStr()) + '&gt;</span>'; }
+function refreshPs(){ $('#ps1').innerHTML = psHtml(); }
+function echo(raw){
+  return new Promise(res=>{
+    const d = line(psHtml() + ' <span class="c2cmd"></span>', 'l-cmd');
+    const span = d.querySelector('.c2cmd');
+    span.style.color = 'var(--text)';
+    if(RM){ span.textContent = raw; res(); return; }
+    let i = 0;
+    const iv = setInterval(()=>{
+      span.textContent = raw.slice(0, ++i); scrollDown();
+      if(i >= raw.length){ clearInterval(iv); res(); }
+    }, 9);
+  });
+}
+const wait = ms => new Promise(r=>setTimeout(r, ms));
+let tail = Promise.resolve();
+function push(parts){
+  const pr = tail.then(async ()=>{
+    for(const p of parts){
+      if(p.t) await echo(p.t); else line(p.html, p.c);
+      await wait(p.d || 40);
+    }
+  });
+  tail = pr.catch(()=>{});
+  return pr;
+}
+const P = (html, c, d) => ({html, c: c||'l-out', d});
+const PT = (t, d) => ({t, d: d||180});
+function say(txt, c, d){ return push([P(esc(txt), c, d)]); }
+
+/* ============ sterowanie serwerem ============ */
+function startServer(){
+  push([
+    P('Watching for file changes with StatReloader', 'l-out', 220),
+    P('Performing system checks...', 'l-out', 300),
+    P('System check identified no issues (0 silenced).', 'l-out', 240),
+    P('Django version 5.1.7, using settings \'todo_project.settings\'', 'l-out', 180),
+    P('Starting development server at http://127.0.0.1:8000/', 'l-ok', 200),
+    P('Quit the server with CTRL-BREAK.', 'l-info', 120)
+  ]).then(()=>{
+    S.serverOn = true; $('#chsrv').classList.add('on'); $('#ctrlc').disabled = false;
+    if(!S.serverSeen){ S.serverSeen = true; switchTab('brow'); }
+    renderBrowser(); updateAll(); save();
+  });
+}
+function stopServer(silent){
+  if(!S.serverOn){ if(!silent) say('Serwer nie działa.', 'l-info'); return; }
+  S.serverOn = false; $('#chsrv').classList.remove('on'); $('#ctrlc').disabled = true;
+  say('Serwer zatrzymany.', 'l-sys'); renderBrowser(); updateAll(); save();
+}
+
+/* ============ router poleceń — część A ============ */
+function lsList(){
+  const out = [];
+  if(cwdLast() === 'Desktop'){ if(S.dirMkdir) out.push('django_cwiczenie/'); }
+  else if(inProject()){
+    if(S.venvMade) out.push('venv/');
+    if(S.projectMade){ out.push('manage.py'); out.push('todo_project/'); }
+    if(S.appMade) out.push('tasks/');
+  }
+  return out;
+}
+function runCmd(raw){
+  const cmd = raw.trim();
+  if(!cmd){ return; }
+  const L = cmd.toLowerCase();
+  if(S.serverOn && !/^python\s+manage\.py\s+runserver$/i.test(L)){
+    push([P('Serwer developerski działa i zajmuje ten terminal.', 'l-warn', 80),
+          P('Zatrzymaj go skrótem Ctrl+C (przycisk na pasku), aby wpisywać kolejne polecenia.', 'l-info', 60)]);
+    return;
+  }
+  if(L === 'cls' || L === 'clear'){ tout.innerHTML = ''; return; }
+  if(L === 'help' || L === 'pomoc'){
+    push([P('Symulacja terminala — polecenia kursu:', 'l-info2', 60),
+      P('  python --version · python -m venv venv · venv\\Scripts\\activate', 'l-out', 40),
+      P('  pip install django · django-admin --version', 'l-out', 40),
+      P('  django-admin startproject todo_project .', 'l-out', 40),
+      P('  python manage.py runserver | startapp tasks', 'l-out', 40),
+      P('  mkdir · cd · dir · cls · Ctrl+C — zatrzymanie serwera', 'l-out', 60)]);
+    return;
+  }
+  /* --- cd --- */
+  const mcd = /^cd\s*(.*)$/i.exec(cmd);
+  if(mcd){
+    const arg = mcd[1].trim().replace(/"/g,'');
+    if(!arg){ say(cwdStr(), 'l-out'); return; }
+    if(arg === '..'){ if(S.cwdPath.length > 2) S.cwdPath.pop(); refreshPs(); return; }
+    const target = arg.replace(/\\/g,'/').split('/').filter(Boolean).pop();
+    if(target.toLowerCase() === 'django_cwiczenie'){
+      if(S.dirMkdir && cwdLast() === 'Desktop'){ S.cwdPath.push('django_cwiczenie'); refreshPs(); return; }
+      push([P('cd : Nie można odnaleźć ścieżki „' + cwdStr() + '\\django_cwiczenie", ponieważ nie istnieje.', 'l-err', 80),
+            P('Najpierw utwórz folder: mkdir django_cwiczenie', 'l-info', 60)]); return;
+    }
+    if(inProject() && (target === 'venv' || target === 'todo_project' || target === 'tasks')){
+      const ok = (target === 'venv' && S.venvMade) || (target === 'todo_project' && S.projectMade) || (target === 'tasks' && S.appMade);
+      if(ok){ S.cwdPath.push(target); refreshPs(); return; }
+      say('cd : Nie można odnaleźć ścieżki „' + target + '", ponieważ nie istnieje.', 'l-err'); return;
+    }
+    say('cd : Nie można odnaleźć ścieżki „' + arg + '", ponieważ nie istnieje.', 'l-err'); return;
+  }
+  /* --- mkdir --- */
+  const mmk = /^(mkdir|md)\s+(.+)$/i.exec(cmd);
+  if(mmk){
+    const name = mmk[2].trim().replace(/["']/g,'').replace(/\\+$/,'');
+    if(name.toLowerCase() === 'django_cwiczenie'){
+      if(S.dirMkdir){ say('mkdir : Folder „django_cwiczenie" już istnieje w tej lokalizacji.', 'l-warn'); return; }
+      S.dirMkdir = true;
+      push([P('    Katalog: C:\\Users\\Uczen\\Desktop\\django_cwiczenie', 'l-out', 120)]);
+      updateAll(); save(); return;
+    }
+    say('OK — folder „' + name + '" utworzony (w kursie oczekujemy folderu django_cwiczenie).', 'l-info');
+    return;
+  }
+  if(/^(ls|dir|gci|get-childitem)$/i.test(L)){
+    const items = lsList();
+    if(!items.length){ push([P(' ', 'l-out', 60)]); return; }
+    push(items.map(i=>P('    ' + (i.endsWith('/') ? i.slice(0,-1) + ' /' : i), 'l-out', 50)));
+    return;
+  }
+  if(/^pwd$/i.test(L) || /^get-location$/i.test(L)){ say(cwdStr(), 'l-out'); return; }
+  /* --- python / py / venv --- */
+  if(/^(python|py)\s+(-v|--version)$/i.test(L) || /^(python|py)\s+-version$/i.test(L)){ say('Python 3.12.7', 'l-ok'); return; }
+  if(/^(python|py)$/i.test(L)){
+    push([P('Python 3.12.7 (tags/v3.12.7:0bd73c2) [MSC v.1938 64 bit (AMD64)] on win32', 'l-out', 180),
+          P('Tryb interaktywny pominięto w symulacji. Do kursu: python -m venv venv', 'l-info', 60)]);
+    return;
+  }
+  if(/^(python|py)\s+-m\s+venv\s+venv$/i.test(L)){
+    if(!inProject()){ say('Utwórz i otwórz najpierw folder django_cwiczenie (krok 1).', 'l-warn'); return; }
+    if(S.venvMade){ say('Środowisko venv już istnieje.', 'l-warn'); return; }
+    S.venvMade = true;
+    push([P('(utworzono venv\\Lib, venv\\Scripts, venv\\pyvenv.cfg)', 'l-sys', 350),
+          P('Środowisko wirtualne gotowe. Aktywuj je: venv\\Scripts\\activate', 'l-info2', 80)]);
+    updateAll(); save(); return;
+  }
+  if(/^(\.\\)?venv[\\\/]+scripts[\\\/]+activate(\.bat)?$/i.test(L) || L === 'activate'){
+    if(!S.venvMade){ say('activate : Nie można odnaleźć pliku. Najpierw: python -m venv venv', 'l-err'); return; }
+    if(S.venvOn){ say('Środowisko jest już aktywne.', 'l-warn'); return; }
+    S.venvOn = true; refreshPs(); $('#chvenv').classList.add('on');
+    say('Środowisko wirtualne aktywne — przed ścieżką pojawiło się (venv).', 'l-ok');
+    updateAll(); save(); return;
+  }
+  if(L === 'deactivate'){
+    S.venvOn = false; refreshPs(); $('#chvenv').classList.remove('on');
+    say('Środowisko dezaktywowane.', 'l-sys'); save(); return;
+  }
+  routeB(cmd, L);
+}
+
+/* ============ router poleceń — część B ============ */
+function routeB(cmd, L){
+  /* --- pip --- */
+  if(/^pip\s+install\s+django\s*$/i.test(L)){
+    const warn = S.venvOn ? null : 'Uwaga: nie masz aktywnego (venv) — Django zainstaluje się globalnie. W kursie najpierw aktywuj środowisko.';
+    S.djangoOk = true;
+    push([P('Collecting django', 'l-out', 260),
+          P('  Downloading Django-5.1.7-py3-none-any.whl (8.3 MB)', 'l-out', 420),
+          P('Collecting asgiref', 'l-out', 180),
+          P('  Downloading asgiref-3.8.1-py3-none-any.whl (238 kB)', 'l-out', 260),
+          P('Collecting sqlparse', 'l-out', 160),
+          P('  Downloading sqlparse-0.5.3-py3-none-any.whl (44 kB)', 'l-out', 240),
+          P('Collecting tzdata', 'l-out', 140),
+          P('  Downloading tzdata-2025.1-py2.py3-none-any.whl (346 kB)', 'l-out', 240),
+          P('Installing collected packages: tzdata, sqlparse, asgiref, django', 'l-out', 340),
+          P('Successfully installed Django-5.1.7 asgiref-3.8.1 sqlparse-0.5.3 tzdata-2025.1', 'l-ok', 100)]
+      .concat(warn ? [P(warn, 'l-warn', 60)] : []));
+    updateAll(); save(); return;
+  }
+  if(/^pip\s+install\s+/i.test(L)){ say('Zainstalowano (symulacja) — w kursie potrzebujemy tylko: pip install django', 'l-info'); return; }
+  if(/^pip\s+(-v|--version)$/i.test(L)){ say('pip 24.3.1 from …\\venv\\lib\\site-packages\\pip (python 3.12)', 'l-out'); return; }
+  if(/^pip$/i.test(L)){ push([P('Usage: pip <command> [options]', 'l-out', 60), P('Kurs: pip install django', 'l-info', 40)]); return; }
+  /* --- django-admin --- */
+  if(/^django-admin\s+--version$/i.test(L)){
+    if(!S.djangoOk){
+      push([P('django-admin : Nie można rozpoznać nazwy „django-admin” jako nazwy polecenia…', 'l-err', 80),
+            P('Najpierw zainstaluj Django: pip install django (krok 2)', 'l-info', 60)]); return;
+    }
+    say('5.1.7', 'l-ok'); return;
+  }
+  const msp = /^django-admin\s+startproject\s+(\S+)\s*(\.)?\s*$/i.exec(cmd);
+  if(msp){
+    if(!S.djangoOk){
+      push([P('django-admin : Nie można rozpoznać nazwy „django-admin”…', 'l-err', 80),
+            P('Najpierw: pip install django (krok 2)', 'l-info', 60)]); return;
+    }
+    if(!inProject()){ say('Wykonaj to polecenie w folderze django_cwiczenie (cd django_cwiczenie).', 'l-warn'); return; }
+    if(S.projectMade){ say('Projekt już istnieje w tym folderze.', 'l-warn'); return; }
+    S.projectMade = true; S.nested = !msp[2];
+    if(msp[2] && msp[1].toLowerCase() !== 'todo_project'){
+      push([P('Uwaga: w kursie projekt nosi nazwę todo_project (dla spójności kodu).', 'l-warn', 80)]);
+    }
+    if(!msp[2]){
+      push([P('(utworzono zagnieżdżony folder ' + msp[1] + '/' + msp[1] + '/ — zabrakło kropki!)', 'l-sys', 220),
+            P('Bez kropki projekt ląduje w podfolderze. W kursie: django-admin startproject todo_project .', 'l-warn', 80)]);
+    } else {
+      push([P('(utworzono manage.py oraz todo_project/: __init__.py, settings.py, urls.py, asgi.py, wsgi.py)', 'l-sys', 300)]);
+    }
+    updateAll(); save(); return;
+  }
+  if(/^django-admin\s+startapp\s+/i.test(L)){ say('startapp wykonuje się przez manage.py: python manage.py startapp tasks', 'l-info'); return; }
+  if(/^django-admin/i.test(L)){
+    push([P('django-admin : Nieznane polecenie. Dostępne: --version · startproject', 'l-err', 80)]); return;
+  }
+  routeC(cmd, L);
+}
+
+/* ============ router poleceń — część C ============ */
+function routeC(cmd, L){
+  const hasManage = S.projectMade && inProject();
+  const mmy = /^python\s+manage\.py\s*(.*)$/i.exec(cmd);
+  if(mmy){
+    if(!hasManage){
+      push([P('python : Nie można odnaleźć pliku „manage.py" w bieżącym folderze.', 'l-err', 80),
+            P(S.projectMade ? 'Wróć do folderu projektu: cd django_cwiczenie' : 'Najpierw utwórz projekt (krok 3).', 'l-info', 60)]);
+      return;
+    }
+    const sub = (mmy[1] || '').trim().toLowerCase();
+    if(!sub || sub === 'help'){
+      push([P('Type \'python manage.py help <subcommand>\' for help on a specific subcommand.', 'l-out', 140),
+        P('Available subcommands:', 'l-out', 120),
+        P('  [auth]      changepassword · createsuperuser', 'l-out', 60),
+        P('  [django]    check · makemigrations · migrate · shell', 'l-out', 60),
+        P('  [django]    startapp · startproject · test', 'l-out', 60),
+        P('  [staticfiles] collectstatic', 'l-out', 80)]);
+      return;
+    }
+    if(sub === 'runserver'){
+      if(!S.djangoOk){
+        push([P('Traceback (most recent call last):', 'l-err', 100),
+              P('ModuleNotFoundError: No module named \'django\'', 'l-err', 80),
+              P('Zainstaluj Django: pip install django', 'l-info', 60)]);
+        return;
+      }
+      if(S.serverOn){ say('Error: That port is already in use. — serwer już działa (Ctrl+C, aby zatrzymać).', 'l-err'); return; }
+      startServer(); return;
+    }
+    const msapp = /^startapp\s+(\S+)$/.exec(sub);
+    if(msapp){
+      if(S.appMade){ say('Aplikacja już istnieje.', 'l-warn'); return; }
+      if(msapp[1].toLowerCase() !== 'tasks') push([P('Uwaga: w kursie aplikacja nazywa się tasks (dla spójności kodu).', 'l-warn', 80)]);
+      S.appMade = true;
+      push([P('(utworzono tasks/: __init__.py, admin.py, apps.py, migrations/, models.py, tests.py, views.py)', 'l-sys', 300)]);
+      updateAll(); save(); return;
+    }
+    if(sub === 'migrate'){
+      push([P('Operations to perform:', 'l-out', 160),
+        P('  Apply all migrations: admin, auth, contenttypes, sessions', 'l-out', 160),
+        P('Running migrations:', 'l-out', 160),
+        P('  Applying contenttypes.0001_initial... OK', 'l-out', 120),
+        P('  Applying auth.0001_initial... OK', 'l-out', 120),
+        P('  Applying admin.0001_initial... OK', 'l-out', 120),
+        P('  Applying sessions.0001_initial... OK', 'l-ok', 120)]);
+      return;
+    }
+    push([P('Unknown command: \'' + sub + '\'', 'l-err', 80),
+          P('Type \'python manage.py help\' for usage.', 'l-info', 60)]);
+    return;
+  }
+  const first = cmd.split(/\s+/)[0];
+  push([P('\'' + first + '\' : Nie rozpoznano nazwy jako polecenia cmdlet, funkcji, pliku skryptu lub programu wykonywalnego.', 'l-err', 80),
+        P('Wpisz help, aby zobaczyć podpowiedzi.', 'l-info', 60)]);
+}
+
+/* ============ kroki / podpowiedzi / postęp ============ */
+const STEPS = [
+  {id:'st1',  h:'mkdir django_cwiczenie', then:'cd django_cwiczenie'},
+  {id:'st2',  h:'python -m venv venv', then:'venv\\Scripts\\activate'},
+  {id:'st3',  h:'django-admin startproject todo_project .'},
+  {id:'st4',  h:'python manage.py runserver'},
+  {id:'st5',  h:'python manage.py startapp tasks'},
+  {id:'st6',  h:'zapisz plik todo_project/settings.py (przycisk na karcie)'},
+  {id:'st7',  h:'zapisz plik tasks/views.py (przycisk na karcie)'},
+  {id:'st8',  h:'zapisz plik todo_project/urls.py (przycisk na karcie)'},
+  {id:'st9',  h:'zapisz plik tasks/templates/tasks/index.html'},
+  {id:'st10', h:'python manage.py runserver i otwórz 127.0.0.1:8000'},
+  {id:'st11', h:'zapisz tasks/static/tasks/style.css oraz index.html (wersja 2)'},
+  {id:'st12', h:'odhacz 4 zadania ucznia'}
+];
+function stepDone(i){
+  const t = (S.saved['tasks/templates/tasks/index.html'] || '');
+  const checks = ['1','2','3','4'].every(k=>S.tasksChk[k]);
+  return [
+    S.dirMkdir && inProject(),
+    S.venvMade && S.venvOn && S.djangoOk,
+    S.projectMade,
+    S.serverSeen,
+    S.appMade,
+    !!S.saved['todo_project/settings.py'],
+    !!S.saved['tasks/views.py'],
+    !!S.saved['todo_project/urls.py'],
+    !!t,
+    S.listaSeen,
+    t === '2' && !!S.saved['tasks/static/tasks/style.css'],
+    checks
+  ][i];
+}
+function currentStepIdx(){ for(let i=0;i<STEPS.length;i++) if(!stepDone(i)) return i; return -1; }
+function hintFor(i){
+  if(i < 0) return '🎉 Wszystkie kroki zakończone! Zajrzyj do bonusu (formularz) i sprawdź się w quizie.';
+  const st = STEPS[i], n = String(i+1).padStart(2,'0');
+  let h = st.h;
+  if(i === 0 && S.dirMkdir) h = st.then;
+  if(i === 1 && S.venvMade && !S.venvOn) h = st.then;
+  return 'Krok ' + n + ' — ' + h;
+}
+function updateAll(){
+  const cur = currentStepIdx();
+  $$('#side a[href^="#st"]').forEach((a, k)=>{
+    const idx = k < STEPS.length ? k : -1;
+    const done = idx >= 0 && stepDone(idx);
+    a.classList.toggle('done', done);
+    a.classList.toggle('cur', idx === cur);
+    if(idx >= 0){
+      const sec = document.getElementById(STEPS[idx].id);
+      if(sec) sec.classList.toggle('done', done);
+      const tm = sec && sec.querySelector('.time');
+      if(tm) tm.classList.toggle('done', done);
+    }
+  });
+  const doneN = STEPS.filter((_, i)=>stepDone(i)).length;
+  $('#pfill').style.width = Math.round(doneN / STEPS.length * 100) + '%';
+  $('#pnum').textContent = doneN + ' / ' + STEPS.length;
+  $('#hintc').textContent = hintFor(cur);
+  tin.placeholder = cur < 0
+    ? 'np. python manage.py runserver — poćwicz jeszcze raz'
+    : 'Krok ' + String(cur+1).padStart(2,'0') + ' — wpisz: ' + hintFor(cur).replace(/^Krok \d+ — /,'');
+  refreshPs(); renderTree(); renderBrowser();
+  $$('.file[data-file]').forEach(f=>{
+    const p = f.dataset.file, btn = f.querySelector('.fbtn');
+    const need = f.dataset.need;
+    const ok = !need || (need === 'app' ? S.appMade : S.projectMade);
+    const isSaved = f.dataset.v === '2' ? S.saved[p] === '2' : !!S.saved[p];
+    btn.disabled = !ok;
+    btn.title = ok ? '' : (need === 'app' ? 'Najpierw utwórz aplikację tasks (krok 5)' : 'Najpierw utwórz projekt (krok 3)');
+    f.classList.toggle('saved', isSaved);
+  });
+}
+
+/* ============ wejście terminala ============ */
+tin.addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){
+    const raw = tin.value;
+    tin.value = '';
+    if(raw.trim()){
+      S.history.push(raw.trim()); if(S.history.length > 60) S.history.shift();
+      S.hIdx = -1; save();
+    }
+    echo(raw).then(()=>runCmd(raw));
+  } else if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    if(S.hIdx === -1) S.hIdx = S.history.length;
+    if(S.hIdx > 0){ S.hIdx--; tin.value = S.history[S.hIdx] || ''; }
+  } else if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    if(S.hIdx >= 0 && S.hIdx < S.history.length - 1){ S.hIdx++; tin.value = S.history[S.hIdx]; }
+    else { S.hIdx = -1; tin.value = ''; }
+  } else if(e.key === 'Tab'){
+    e.preventDefault();
+    const v = tin.value.toLowerCase();
+    const cands = ['python --version','python -m venv venv','venv\\Scripts\\activate','pip install django',
+      'django-admin --version','django-admin startproject todo_project .','python manage.py runserver',
+      'python manage.py startapp tasks','python manage.py migrate','dir','cls','help'];
+    const hit = cands.find(c=>c.startsWith(v) && v.length > 0);
+    if(hit) tin.value = hit;
+  }
+});
+
+/* ============ panel: karty, przyciski ============ */
+function switchTab(name){
+  $$('.deck .tab').forEach(t=>t.classList.toggle('on', t.dataset.tab === name));
+  $$('.view').forEach(v=>v.classList.toggle('on', v.id === 'v-' + name));
+  if(deck.classList.contains('min')) setDeck(false); /* klik w zakładkę rozwija panel */
+  if(name === 'term') tin.focus({preventScroll:true});
+  if(name === 'brow') renderBrowser();
+}
+$$('.deck .tab').forEach(t=>t.addEventListener('click', ()=>switchTab(t.dataset.tab)));
+$('#ctrlc').addEventListener('click', ()=>stopServer(false));
+$('#ctrlc').disabled = true;
+const deck = $('#deck');
+function setDeck(min){
+  deck.classList.toggle('min', min);
+  $('#termbtn').textContent = min ? '▴' : '▾';
+  document.body.style.paddingBottom = min ? '' : 'var(--deck-h)';
+}
+$('#termbtn').addEventListener('click', ()=>setDeck(!deck.classList.contains('min')));
+$('#openDeck').addEventListener('click', ()=>{ setDeck(false); switchTab('term'); });
+$('#bgo').addEventListener('click', renderBrowser);
+$('#baddr').addEventListener('keydown', e=>{ if(e.key === 'Enter') renderBrowser(); });
+$$('[data-a="put"]').forEach(b=>b.addEventListener('click', ()=>{
+  setDeck(false); switchTab('term'); tin.value = b.dataset.cmd; tin.focus();
+}));
+$$('[data-a="run"]').forEach(b=>b.addEventListener('click', async ()=>{
+  setDeck(false); switchTab('term');
+  const c = b.dataset.cmd; tin.value = c; tin.focus();
+  S.history.push(c); if(S.history.length > 60) S.history.shift();
+  await echo(c); runCmd(c);
+}));
+$$('[data-a="reveal"]').forEach(b=>b.addEventListener('click', ()=>{
+  const q = document.getElementById(b.dataset.q);
+  q.classList.toggle('open');
+  b.textContent = q.classList.contains('open') ? 'Ukryj odpowiedź' : 'Pokaż odpowiedź';
+}));
+$$('.file [data-a="save"]').forEach(b=>b.addEventListener('click', ()=>{
+  const p = b.dataset.file, v = b.dataset.v;
+  const before = S.saved[p];
+  S.saved[p] = v === '2' ? '2' : '1';
+  say('Zapisano plik: ' + p + (v === '2' ? ' (wersja 2)' : ''), 'l-ok');
+  push([P(before ? '(zaktualizowano plik — patrz karta Pliki)' : '(nowy plik — patrz karta Pliki)', 'l-info', 60)]);
+  save(); updateAll();
+}));
+$$('.tsk').forEach(t=>t.addEventListener('click', e=>{
+  if(e.target.closest('label')) return;
+  const cb = t.querySelector('input');
+  cb.checked = !cb.checked; cb.dispatchEvent(new Event('change'));
+}));
+$$('.tsk input[type=checkbox]').forEach(cb=>cb.addEventListener('change', ()=>{
+  S.tasksChk[cb.dataset.task] = cb.checked;
+  cb.closest('.tsk').classList.toggle('chk', cb.checked);
+  save(); updateAll();
+}));
+$('#resetbtn').addEventListener('click', ()=>{
+  if(confirm('Wyczyścić zapisany postęp? Strona wróci do stanu początkowego.')){
+    localStorage.removeItem(LS); location.reload();
+  }
+});
+document.addEventListener('keydown', e=>{
+  if(e.ctrlKey && e.key === '`'){ e.preventDefault(); setDeck(!deck.classList.contains('min')); switchTab('term'); return; }
+  const sel = getSelection().toString();
+  if(e.ctrlKey && (e.key === 'c' || e.key === 'C') && !sel && S.serverOn){
+    e.preventDefault(); stopServer(false); return;
+  }
+  if(e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName) && !deck.classList.contains('min')){
+    e.preventDefault(); tin.focus();
+  }
+});
+
+/* ============ quiz ============ */
+$$('[data-a="quizcheck"]').forEach(btn=>btn.addEventListener('click', ()=>{
+  let ok = 0, answered = 0;
+  $$('.quiz .qi').forEach(qi=>{
+    const chosen = [...qi.querySelectorAll('input')].find(i=>i.checked);
+    [...qi.querySelectorAll('label')].forEach(l=>l.classList.remove('good','badz'));
+    if(!chosen) return;
+    answered++;
+    if(chosen.dataset.good){ ok++; qi.classList.add('right'); chosen.closest('label').classList.add('good'); }
+    else chosen.closest('label').classList.add('badz');
+  });
+  S.quizScore = {ok, answered};
+  const qres = $('#qres');
+  qres.textContent = answered < 6
+    ? 'Odpowiedziano na ' + answered + ' z 6 pytań. Poprawnych: ' + ok + '.'
+    : (ok === 6 ? '🏆 Wynik 6/6 — Django nie ma przed Tobą tajemnic!'
+                : 'Wynik ' + ok + '/6. Zajrzyj do ściągi powyżej i spróbuj ponownie.');
+  save();
+}));
+$$('.quiz input[type=radio]').forEach(r=>r.addEventListener('change', ()=>{
+  const qi = r.closest('.qi');
+  S.quizAns[r.name] = [...qi.querySelectorAll('input')].findIndex(i=>i.checked);
+  save();
+}));
+/* ============ scroll spy ============ */
+const spy = new IntersectionObserver(ents=>{
+  ents.forEach(en=>{ if(en.isIntersecting){
+    $$('#side a').forEach(a=>a.classList.toggle('on', a.getAttribute('href') === '#' + en.target.id));
+  }});
+}, {rootMargin:'-30% 0px -60% 0px'});
+$$('main .sec').forEach(s=>spy.observe(s));
+/* ============ init ============ */
+load();
+refreshPs();
+$('#chvenv').classList.toggle('on', S.venvOn);
+$('#termbtn').textContent = '▾';
+document.body.style.paddingBottom = 'var(--deck-h)';
+/* na telefonie panel zaczyna zwinięty — treść ma prawie cały ekran, belka z zakładkami zostaje */
+if(matchMedia('(max-width:560px)').matches) setDeck(true);
+const had = Object.keys(S.saved).length || Object.keys(S.tasksChk).length || Object.keys(S.quizAns).length;
+push([
+  P('Symulowany terminal VS Code (PowerShell) — kurs Django od zera', 'l-sys', 140),
+  P('Wpisuj polecenia i zatwierdzaj klawiszem Enter. Historia: strzałki ↑/↓. Pomoc: wpisz help.', 'l-sys', 60)
+]).then(()=>{
+  if(had) say('Przywrócono zapisany postęp — działaj dalej! (Przycisk „Wyczyść postęp" na górze strony, aby zacząć od nowa.)', 'l-info2');
+});
+Object.keys(S.tasksChk).forEach(k=>{
+  const cb = document.querySelector('.tsk input[data-task="' + k + '"]');
+  if(cb && S.tasksChk[k]){ cb.checked = true; cb.closest('.tsk').classList.add('chk'); }
+});
+Object.keys(S.quizAns).forEach(k=>{
+  const inputs = $$('input[name="' + k + '"]');
+  if(S.quizAns[k] >= 0 && inputs[S.quizAns[k]]) inputs[S.quizAns[k]].checked = true;
+});
+if(S.quizScore){
+  const {ok, answered} = S.quizScore;
+  $('#qres').textContent = 'Ostatni wynik quizu: ' + ok + '/' + (answered || 6) + ' — możesz powtórzyć.';
+  $$('.quiz .qi').forEach(qi=>{
+    const chosen = [...qi.querySelectorAll('input')].find(i=>i.checked);
+    if(!chosen) return;
+    qi.classList.add('right');
+    if(chosen.dataset.good) chosen.closest('label').classList.add('good');
+    else chosen.closest('label').classList.add('badz');
+  });
+}
+updateAll();
+</script>
+</body>
+</html>
